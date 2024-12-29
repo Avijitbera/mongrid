@@ -7,5 +7,12 @@ export interface CustomType<T = any> {
 
 export class CustomTypeRegistry {
     private static types: Map<string, CustomType> = new Map();
+
+    static register(type: CustomType) {
+        if (this.types.has(type.name)) {
+            throw new Error(`Type ${type.name} already registered`);
+        }
+        this.types.set(type.name, type);
+    }
 }
 
