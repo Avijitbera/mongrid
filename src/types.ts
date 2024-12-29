@@ -1,4 +1,4 @@
-import {Document} from 'mongodb'
+import {Document, ObjectId} from 'mongodb'
 
 export interface BsonifyOptions {
     url: string
@@ -19,4 +19,21 @@ export type SchemaType = {
 export interface ModelOptions {
     timestamps?:boolean;
     collection?: string;
+}
+
+
+export type InferSchemaType<T extends SchemaType> = {
+    [K in keyof T]: T[K]['type'] extends typeof String
+    ? string
+    : T[K]['type'] extends typeof Number
+    ? number
+    : T[K]['type'] extends typeof Boolean
+    ? boolean
+    : T[K]['type'] extends typeof Date
+    ? Date
+    : T[K]['type'] extends typeof ObjectId
+    ? ObjectId
+    : T[K]['type'] extends (infer U)[]
+    ? U[]
+    : T[K]['type'];
 }
