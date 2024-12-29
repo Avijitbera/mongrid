@@ -14,5 +14,13 @@ export class CustomTypeRegistry {
         }
         this.types.set(type.name, type);
     }
+
+    static get(name: string): CustomType | undefined {
+        return this.types.get(name);
+    }
+
+    static isCustomType(type: any): type is CustomType {
+        return type && typeof type === "object" && 'name' in type;
+    }   
 }
 
