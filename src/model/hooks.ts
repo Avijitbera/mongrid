@@ -14,4 +14,21 @@ export class ModelHooks<T> {
         hooks.push(fn);
         this.postHooks.set(hook, hooks);
     }
+    async executePostHooks(hook:string, data:any): Promise<any> {
+        const hooks = this.postHooks.get(hook) || [];
+        let result = data;
+        for (const fn of hooks) {
+            result = await fn(data);
+        }
+        return result
+    }
+
+    async executePreHooks(hook:string, data:any): Promise<any> {
+        const hooks = this.preHooks.get(hook) || [];
+        let result = data;
+        for (const fn of hooks) {
+            result = await fn(data);
+        }
+        return result
+    }
 }
