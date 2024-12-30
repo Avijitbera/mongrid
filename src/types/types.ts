@@ -19,6 +19,13 @@ export type SchemaType = {
 export interface ModelOptions {
     timestamps?:boolean;
     collection?: string;
+    softDelete?: boolean;
+    defaultOptions?:{
+        sort?: Record<string, 1 | -1>;
+        limit?: number;
+        skip?: number
+    },
+    description?:string
 }
 
 

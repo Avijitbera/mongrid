@@ -1,6 +1,10 @@
 import {} from 'mongodb'
-import { SchemaType } from '../types/types';
+import { ModelOptions, SchemaType } from '../types/types';
 
 export class BaseModel<T extends SchemaType> {
-    
+
+    constructor(
+        public options: ModelOptions = {},
+
+    ){}
 }
