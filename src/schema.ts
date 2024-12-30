@@ -1,5 +1,5 @@
 import { SchemaType } from './types/types'
-// import {} from '../src/'
+import {CustomTypeRegistry} from '../src/types/custom'
 
 export class Schema<T extends SchemaType>{
     constructor(private schema: T){}
@@ -31,6 +31,64 @@ export class Schema<T extends SchemaType>{
     }
 
     private validateType(value:any, type:any): boolean{
-        return true
+        if(CustomTypeRegistry.isCustomType(type)){
+            return type.validate(value)
+        }
+
+        if(Array.isArray(type)){
+            return Array.isArray(value) && value.every((item) => this.validateType(item, type[0]))
+        }
+
+        switch(type){
+            case String:
+                return typeof value === 'string';
+            case Number:
+                return typeof value === 'number';
+            case Boolean:
+                return typeof value === 'boolean';
+            case Date:
+                return value instanceof Date;
+            default:
+                return true
+        }
+    }
+
+    serialize(data:any):any{
+        const serializd: any = {}
+        for (const [field, value] of Object.entries(data)) {
+            if (value === undefined) continue
+
+            const config = this.schema[field]
+            if(!config){
+                serializd[field] = value
+                continue;
+            }
+            const type = config.type;
+            if(CustomTypeRegistry.isCustomType(type)){
+                serializd[field] = type.serialize(value)
+            }else{
+                serializd[field] = value
+            }
+            }
+            return serializd
+    }
+
+    deserialize(data:any):any{
+        const deserialized: any = {}
+        for (const [field, value] of Object.entries(data)) {
+            if (value === undefined) continue
+            const config = this.schema[field]
+            if(!config){
+                deserialized[field] = value;
+                continue;
+            }
+            const type = config.type;
+            if(CustomTypeRegistry.isCustomType(type)){
+                deserialized[field] = type.deserialize(value)
+            }else{
+                deserialized[field] = value
+            }
+        }
+        return deserialized
     }
 }
