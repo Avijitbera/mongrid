@@ -14,27 +14,38 @@ export class ExtensionManager{
         }
 
         if(extensions.methods){
-            Object.entries(extensions.methods).forEach(([methodName, fn]) => {
-                if((this.model as any)[methodName]){
-                    throw new Error(`Method "${methodName}" already exists on model`)
-                }
-                (this.model as any)[methodName] = fn.bind(this.model);;
-            })
+            this.registerMethods(extensions.methods);
         }
 
         if(extensions.statics){
-            Object.entries(extensions.statics).forEach(([methodName, fn]) => {
-                if((this.model.constructor as any)[methodName]){
-                    throw new Error(`Static method "${methodName}" already exists on model`)
-                }
-                (this.model as any)[methodName] = fn;
-            })
+            this.registerStatics(extensions.statics);
         }
 
         if(extensions.queryHandlers){
             this.queryHandlers.push(extensions.queryHandlers);
         }
+        if(extensions.queryHandlers){
+            this.queryHandlers.push(extensions.queryHandlers);
+        }
         this.extensions.set(name, extensions);
+    }
+
+    private registerStatics(statics: Record<string, Function>): void{
+        Object.entries(statics).forEach(([methodName, fn]) => {
+            if((this.model.constructor as any)[methodName]){
+                throw new Error(`Static method "${methodName}" already exists on model`)
+            }
+            (this.model as any)[methodName] = fn;
+        })
+    }
+
+    private registerMethods(methods: Record<string, Function>): void{
+        Object.entries(methods).forEach(([methodName, fn]) => {
+            if((this.model as any)[methodName]){
+                throw new Error(`Method "${methodName}" already exists on model`)
+            }
+            (this.model as any)[methodName] = fn.bind(this.model);;
+        })
     }
 
     async applyQueryHandlers<T extends Document>(
