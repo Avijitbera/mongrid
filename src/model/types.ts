@@ -11,6 +11,18 @@ export interface QueryResult<T> {
 export interface BsonifyQueryOptions {
     populate?: string[];
     lean?: boolean;
-    
+
     requestTimeout?: number; // Renamed from timeout to avoid conflict
+}
+
+export type ModelQueryOptions = Omit<FindOptions, 'timeout'> & BsonifyQueryOptions;
+
+export interface UpdateOptions extends Omit<FindOptions, 'timeout'>{
+    upsert?: boolean;
+    multi?: boolean;
+}
+
+export interface DeleteOptions {
+    force?: boolean;
+    cascade?: boolean;
 }
