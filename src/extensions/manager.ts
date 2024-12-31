@@ -1,6 +1,8 @@
 import { Document, Filter, FindOptions } from 'mongodb';
 import {Model} from '../model/model'
 import { ModelExtension, QueryHandlers } from './types'
+import { handleAfterFind, handleBeforeFind } from './handlers/find';
+import { handleAfterCreate, handleBeforeCreate } from './handlers/create';
 
 export class ExtensionManager{
     private extensions: Map<string, ModelExtension> = new Map();
@@ -48,19 +50,53 @@ export class ExtensionManager{
         })
     }
 
+    /**
+     * Applies all registered query handlers for the given phase and arguments.
+     * 
+     * @param phase The phase of the query handlers to apply. Must be one of the
+     * properties of the `QueryHandlers` interface.
+     * 
+     * @param args The arguments to pass to the query handlers.
+     * 
+     * @returns The result of applying all query handlers. The result may be
+     * modified by one or more query handlers.
+     */
     async applyQueryHandlers<T extends Document>(
         phase: keyof QueryHandlers,
-        args: T[]
-    ): Promise<T[]>{
-        let result = [...args];
+        args: unknown[]
+    ): Promise<unknown[]>{
+        let result = args;
         for(const handlers of this.queryHandlers){
             const handler = handlers[phase];
-            if(handler){
+            if(!handler) continue
+            try {
                 switch(phase){
                     case 'beforeFind':
-                        
+                        result = await handleBeforeFind(handler as QueryHandlers['beforeFind'], result);
+                        break;
+                    case 'afterFind':
+                        result = [await handleAfterFind(handler as QueryHandlers['afterFind'], result)];
+                        break;
+                    case 'beforeCreate':
+                        result = [await handleBeforeCreate(handler as QueryHandlers['beforeCreate'], result)];
+                        break;
+                    case 'afterCreate':
+                        result =[ await handleAfterCreate(handler as QueryHandlers['afterCreate'], result)];
+                        break;
+                    // case 'beforeUpdate':
+                    //     result = await handleBeforeUpdate(handler, result);
+                    //     break;
+                    // case 'afterUpdate':
+                    //     result = await handleAfterUpdate(handler, result);
+                    //     break;
+                    // case 'beforeDelete':
+                    //     result = await handleBeforeDelete(handler, result);
+                    default:
+                        result = [];
                 }
-
+            } catch (error) {
+                console.log(`Error in ${phase} handler: ${error}`);
+                throw error
             }
         }
         return result
