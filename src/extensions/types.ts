@@ -9,7 +9,7 @@ export interface ExtensionContext<T extends SchemaType = SchemaType> {
     
 }
 
-export interface QueryExtension {
+export interface QueryHandlers<T extends Document = Document> {
     beforeFind?: (filter: Filter<Document>, options?:FindOptions) => Promise<[Filter<Document>, FindOptions?]>;
     afterFind?: (result: Document[]) => Promise<Document[]>;
     beforeCreate?: (data:any) => Promise<any>;
@@ -21,8 +21,9 @@ export interface QueryExtension {
 
 }
 
-export interface ModelExtension {
+export interface ModelExtension<T extends Document = Document> {
     methods?: Record<string, (this: Model<any>, ...args:any[]) => any>;
     statics?: Record<string, (...args:any[]) => any>;
-    queryExtensions?: QueryExtension;
+    queryHandlers?: QueryHandlers<T>;
+    setup?: (context: ExtensionContext) => Promise<void>;
 }

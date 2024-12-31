@@ -3,6 +3,7 @@ import { ModelOptions, SchemaType } from '../types/types';
 import { RelationManager } from '../relationships/manager';
 import { BsonifyClient } from '../client';
 import { Schema } from '../schema';
+import { ExtensionManager } from '../extensions/manager';
 
 export class Model<T extends SchemaType> {
     private collection: Collection;
