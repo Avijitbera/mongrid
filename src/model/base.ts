@@ -7,8 +7,9 @@ import { ModelValidation } from './validation';
 import { ModelIndexes } from './indexes';
 import { RelationManager } from '../relationships/manager';
 import { BsonifyClient } from '../client';
+import { IModelOperations } from '../relationships/types';
 
-export abstract class BaseModel<T extends SchemaType> {
+export abstract class BaseModel<T extends SchemaType> implements IModelOperations {
     protected collection: Collection;
     protected queryBuilder: QueryBuilder<T>;
     protected hooks: ModelHooks<T>;
@@ -35,5 +36,8 @@ export abstract class BaseModel<T extends SchemaType> {
         this.relationManager = new RelationManager(this);
 
         client.registerModel(name, this);
+    }
+    getCollection(): Collection {
+        throw new Error('Method not implemented.');
     }
 }
