@@ -2,6 +2,7 @@ import {Filter} from 'mongodb'
 import {BaseModel} from './base'
 import {SchemaType} from '../types/types'
 import {ModelDocument, ModelQueryOptions} from '../types/model'
+import { convertFilterIds } from '../utils/id';
 
 export class ModelOperations<T extends SchemaType> extends BaseModel<T> {
 
@@ -22,7 +23,7 @@ export class ModelOperations<T extends SchemaType> extends BaseModel<T> {
         filter: Filter<ModelDocument<T>>,
         options?: ModelQueryOptions
       ): Promise<ModelDocument<T> | null> {
-        const query = this.queryBuilder.buildQuery(filter);
+        const query = this.queryBuilder.buildQuery(convertFilterIds(filter));
         const queryOptions = this.queryBuilder.buildOptions(options);
     
         const doc = await this.collection.findOne(query, queryOptions);
