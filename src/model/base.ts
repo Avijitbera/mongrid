@@ -8,7 +8,7 @@ import { ModelIndexes } from './indexes';
 import { RelationManager } from '../relationships/manager';
 import { BsonifyClient } from '../client';
 
-export class BaseModel<T extends SchemaType> {
+export abstract class BaseModel<T extends SchemaType> {
     protected collection: Collection;
     protected queryBuilder: QueryBuilder<T>;
     protected hooks: ModelHooks<T>;

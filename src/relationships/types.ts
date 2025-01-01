@@ -1,5 +1,14 @@
+import { Collection } from 'mongodb';
 import {RelationType} from '../types/model'
 
+
+export interface IModelOperations {
+    getCollection(): Collection;
+    client:{
+        getModel(name:string): IModelOperations;
+    }
+    
+}
 
 export interface RelationConfig {
     type: RelationType;
