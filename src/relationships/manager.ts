@@ -103,4 +103,17 @@ export class RelationManager {
           _id: { $in: targetIds }
         });
       }
+
+      private async resolveManyToOne<T extends ModelDocument<any>>(
+        doc: T,
+        refModel: string,
+        localField: string,
+        foreignField: string
+      ): Promise<any> {
+        const foreignValue = doc[foreignField];
+        if (!foreignValue) return null;
+    
+        const query = { [localField]: foreignValue };
+        return this.model.client.getModel(refModel).findOne(query);
+      }
 }
