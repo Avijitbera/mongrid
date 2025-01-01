@@ -23,7 +23,7 @@ export abstract class BaseOperations<T extends SchemaType> extends BaseModel<T> 
         
         if (Array.isArray(result)) {
           return Promise.all(
-            result.map(doc => this.relationManager.populate(doc, options.populate))
+            result.map(doc => this.relationManager.populate(doc, options.populate!))
           ) as Promise<R>;
         }
         

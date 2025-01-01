@@ -1,4 +1,4 @@
-import {Collection} from 'mongodb'
+import {Collection, Filter, FindOptions} from 'mongodb'
 import {Schema} from '../schema'
 import {QueryBuilder} from './query_builder'
 import { ModelOptions, SchemaType } from '../types/types';
@@ -20,15 +20,16 @@ export abstract class BaseModel<T extends SchemaType> implements IModelOperation
 
 
     constructor(
+        public readonly client: BsonifyClient,
         protected options: ModelOptions = {},
         protected schema: Schema<T>,
-        protected client: BsonifyClient,
         protected name: string
 
 
     ){
         const collectionName = options.collection || name.toLowerCase();
         this.collection = client.getDatabase().collection(collectionName);
+        
         this.queryBuilder = new QueryBuilder<T>(this.options);
         this.hooks = new ModelHooks<T>();
         this.validation = new ModelValidation<T>(this.schema);
@@ -37,7 +38,23 @@ export abstract class BaseModel<T extends SchemaType> implements IModelOperation
 
         client.registerModel(name, this);
     }
-    getCollection(): Collection {
+    findOne(filter: Filter<any>, options?: FindOptions): Promise<any> {
         throw new Error('Method not implemented.');
     }
+    find(filter: Filter<any>, options?: FindOptions): Promise<any[]> {
+        throw new Error('Method not implemented.');
+    }
+   
+
+    getSchema(): Schema<T> {
+        return this.schema;
+      }
+    
+      getOptions(): ModelOptions {
+        return this.options;
+      }
+    
+      getCollection(): Collection {
+        return this.collection;
+      }
 }
