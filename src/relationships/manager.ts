@@ -16,13 +16,13 @@ export class RelationManager {
       }
 
       async populate<T extends ModelDocument<any>>(doc: T, fields: string[]): Promise<T> {
-        const populated = { ...doc };
+        const populated = { ...doc } as T;
     
         for (const field of fields) {
           const relation = this.relations.get(field);
           if (!relation) continue;
     
-          populated[field] = await this.resolveRelation(doc, relation);
+          populated[field as keyof T] = await this.resolveRelation(doc, relation);
         }
     
         return populated;
@@ -82,5 +82,25 @@ export class RelationManager {
     
         const query = { [foreignField]: localValue };
         return this.model.client.getModel(refModel).find(query);
+      }
+
+      private async resolveManyToMany<T extends ModelDocument<any>>(
+        doc: T,
+        refModel: string,
+        localField: string,
+        through: string
+      ): Promise<any[]> {
+        const junctionModel = this.model.client.getModel(through);
+        const targetModel = this.model.client.getModel(refModel);
+    
+        const relations = await junctionModel.find({
+          [localField]: doc._id
+        });
+    
+        const targetIds = relations.map(rel => rel[refModel.toLowerCase() + 'Id']);
+    
+        return targetModel.find({
+          _id: { $in: targetIds }
+        });
       }
 }
