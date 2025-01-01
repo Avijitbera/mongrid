@@ -16,11 +16,15 @@ export class ReadOperations<T extends SchemaType> extends BaseOperations<T> {
         })
     }
     
-    protected executeQuery<R>(operation: string,
+    protected async executeQuery<R>(operation: string,
          callback: () => Promise<R>,
          options?: ModelQueryOptions,
          filter?: Filter<ModelDocument<T>> | undefined): Promise<R> {
-        throw new Error("Method not implemented.");
+        try {
+            return await callback()
+        } catch (error) {
+            throw new QueryError(operation, filter, options, error)
+        }
     }
     
 }
