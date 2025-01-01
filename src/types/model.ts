@@ -1,4 +1,4 @@
-import {CreateIndexesOptions, Document, FindOptions, } from 'mongodb'
+import {CreateIndexesOptions, Document, FindOptions, ObjectId, } from 'mongodb'
 import {SchemaType} from './types'
 
 export type RelationType = "ONE_TO_ONE" | "ONE_TO_MANY" | "MANY_TO_ONE" | "MANY_TO_MANY"
@@ -19,7 +19,7 @@ export interface ModelQueryOptions extends FindOptions {
 }
 
 export interface ModelDocument<T> extends Document {
-    _id: string;
+    _id: ObjectId;
     createdAt?: Date;
     updatedAt?: Date;
     deletedAt?: Date | null;

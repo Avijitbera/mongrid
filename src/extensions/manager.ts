@@ -64,7 +64,7 @@ export class ExtensionManager{
     async applyQueryHandlers<T extends Document>(
         phase: keyof QueryHandlers,
         args: unknown[]
-    ): Promise<unknown[]>{
+    ): Promise<unknown>{
         let result = args;
         for(const handlers of this.queryHandlers){
             const handler = handlers[phase];
@@ -99,9 +99,12 @@ export class ExtensionManager{
                 throw error
             }
         }
-        return result
+        return Array.isArray(result) && result.length === 1 ? result[0] : result
     }
 
+    getExtension(name:string):ModelExtension | undefined {
+        return this.extensions.get(name)
+    }
 
 }
 

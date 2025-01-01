@@ -6,12 +6,12 @@ import { Filter } from 'mongodb'
 export class QueryBuilder<T extends SchemaType> {
     constructor(private modelOptions: ModelOptions){}
 
-    buildQuery(filter: Filter<ModelDocument<T>> = {}):Filter<ModelDocument<T>> {
+    buildQuery(filter: Filter<ModelDocument<T>> = {}): Filter<ModelDocument<T>> {
         return {
-            ...filter,
-            ...this.buildSoftDeleteQuery()
-        }
-    }
+          ...filter,
+          ...this.buildSoftDeleteQuery(),
+        };
+      }
 
     buildOptions(options: ModelQueryOptions = {}): ModelQueryOptions {
         return {
