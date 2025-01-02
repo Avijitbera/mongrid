@@ -1,8 +1,9 @@
-import { Filter } from "mongodb";
+import { Filter, WithId } from "mongodb";
 import { ModelQueryOptions, ModelDocument } from "../../types/model";
 import { SchemaType } from "../../types/types";
 import { BaseOperations } from "./base_operations";
 import { convertFilterIds } from "../../utils/id";
+import { QueryError } from "../../errors/query_error";
 
 
 export class ReadOperations<T extends SchemaType> extends BaseOperations<T> {
@@ -13,7 +14,12 @@ export class ReadOperations<T extends SchemaType> extends BaseOperations<T> {
         return this.executeQuery("findOne", async() =>{
             const query = this.queryBuilder.buildQuery(convertFilterIds(filter))
             const queryOptions = this.buildQueryOptions(options);
-        })
+
+            const doc = await this.collection.findOne<WithId<ModelDocument<T>>>(query, queryOptions);
+            if (!doc) return null;
+            const result = await this.hooks.executePostHooks('findOne', doc as ModelDocument<T>);
+            return this.handlePopulation(result, options);
+        }, options, filter)
     }
     
     protected async executeQuery<R>(operation: string,
