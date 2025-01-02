@@ -8,6 +8,17 @@ import { BaseModel } from "../base";
 
 
 export abstract class BaseOperations<T extends SchemaType> extends BaseModel<T> {
+    /**
+     * Execute a query operation.
+     *
+     * This method is abstract and must be implemented by any child class.
+     *
+     * @param operation - The name of the operation, used for error reporting.
+     * @param callback - A callback that performs the actual query.
+     * @param options - Query options, such as sorting, filtering, and limiting.
+     * @param filter - Additional filter to apply to the query.
+     * @returns A promise that resolves to the result of the query.
+     */
     protected abstract executeQuery<R>(
         operation: string,
         callback:()=> Promise<R>,
@@ -28,5 +39,19 @@ export abstract class BaseOperations<T extends SchemaType> extends BaseModel<T> 
         }
         
         return this.relationManager.populate(result, options.populate) as Promise<R>;
+      }
+
+      protected buildQueryOptions(options?: ModelQueryOptions): ModelQueryOptions {
+        return {
+          ...this.queryBuilder.buildOptions(options),
+          ...this.buildPopulateOptions(options)
+        }
+      }
+
+      private buildPopulateOptions(options?: ModelQueryOptions): Partial<ModelQueryOptions>{
+        if (!options?.populate) return {};
+        return {
+          projection: this.relationManager.getRequiredFields(options.populate)
+        }
       }
 }
