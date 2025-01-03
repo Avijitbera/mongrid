@@ -8,6 +8,14 @@ import { DeleteError } from "../../errors/delete_error";
 
 export class DeleteOperations<T extends SchemaType> extends BaseOperations<T> {
     
+    /**
+     * Delete a single document from the collection.
+     * 
+     * @param filter The filter to apply to the query.
+     * @param options Additional query options.
+     * @returns A promise that resolves to true if a document was deleted, false otherwise.
+     * @throws {DeleteError} If the query fails.
+     */
     async deleteOne(
         filter: Filter<ModelDocument<T>>,
         options?: ModelQueryOptions
@@ -34,6 +42,14 @@ export class DeleteOperations<T extends SchemaType> extends BaseOperations<T> {
         },options, filter);
     }
 
+    /**
+     * Restore a single document by setting its deletedAt field to null.
+     * 
+     * @param filter The filter to apply to the query.
+     * @param options Additional query options.
+     * @returns A promise that resolves to true if a document was restored, false otherwise.
+     * @throws {Error} If the softDelete option is not enabled.
+     */
     async restore(
         filter: Filter<ModelDocument<T>>,
         options?: ModelQueryOptions
@@ -57,6 +73,18 @@ export class DeleteOperations<T extends SchemaType> extends BaseOperations<T> {
 
     }
     
+    /**
+     * Execute a delete operation.
+     *
+     * This method is abstract and must be implemented by any child class.
+     *
+     * @param operation - The name of the operation, used for error reporting.
+     * @param callback - A callback that performs the actual query.
+     * @param options - Query options, such as sorting, filtering, and limiting.
+     * @param filter - Additional filter to apply to the query.
+     * @returns A promise that resolves to the result of the query.
+     * @throws {DeleteError} If the query fails.
+     */
     protected async executeQuery<R>(operation: string,
          callback: () => Promise<R>,
           options?: ModelQueryOptions, 
