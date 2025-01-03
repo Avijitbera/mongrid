@@ -5,6 +5,7 @@ import { ModelDocument, ModelQueryOptions, BsonifyQueryOptions } from '../../typ
 import { convertFilterIds } from '../../utils/id';
 import { SchemaType } from '../../types/types';
 import { BaseOperations } from './base_operations';
+import { WriteError } from '../../errors/write_error';
 
 
 export class WriteOperations<T extends SchemaType> extends BaseOperations<T> {
