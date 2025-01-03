@@ -1,10 +1,21 @@
 import { IModelOperations, Relation, RelationConfig } from "./types";
-import {Model} from '../model/model'
+
 import { ModelDocument } from "../types/model";
 export class RelationManager {
     private relations: Map<string, Relation> = new Map()
     constructor(private model: IModelOperations){}
 
+    /**
+     * Register a relation between two models.
+     *
+     * @param field - The field on the model where the relation will be stored.
+     * @param config - The relation configuration.
+     * @param config.localField - The field on the local model.
+     * @param config.foreignField - The field on the related model.
+     * @param config.ref - The name of the related model.
+     * @param config.type - The type of the relation (ONE_TO_ONE, ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY).
+     * @param config.through - The pivot model for MANY_TO_MANY relations.
+     */
     addRelation(field: string, config: RelationConfig): void {
         this.relations.set(field, {
           localField: config.localField || '_id',
@@ -15,6 +26,13 @@ export class RelationManager {
         });
       }
 
+    /**
+     * Populate a document with relations.
+     *
+     * @param doc - The document to populate.
+     * @param fields - The fields to populate.
+     * @returns The populated document.
+     */
       async populate<T extends ModelDocument<any>>(doc: T, fields: string[]): Promise<T> {
         const populated = { ...doc } as T;
     
@@ -28,6 +46,12 @@ export class RelationManager {
         return populated;
       }
 
+      /**
+       * Returns an object of fields required to populate the given relations.
+       *
+       * @param populate - The fields to populate.
+       * @returns An object where the keys are the required fields and the value is always 1.
+       */
       getRequiredFields(populate: string[]): Record<string, 1> {
         const fields: Record<string, 1> = { _id: 1 };
         
@@ -41,6 +65,14 @@ export class RelationManager {
         return fields;
       }
 
+    /**
+     * Resolve a relation on the given document.
+     *
+     * @param doc - The document where the relation is stored.
+     * @param relation - The relation configuration.
+     * @returns The resolved value.
+     * @throws {Error} If the relation type is unsupported.
+     */
       private async resolveRelation(doc: any, relation: Relation): Promise<any> {
         const { type, refModel, localField, foreignField, through } = relation;
     
