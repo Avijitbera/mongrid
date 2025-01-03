@@ -26,7 +26,20 @@ export abstract class BaseOperations<T extends SchemaType> extends BaseModel<T> 
         filter?: Filter<ModelDocument<T>>
     ): Promise<R>;
 
-    protected async handlePopulation<R extends ModelDocument<T> | ModelDocument<T>[] | null>(
+   
+
+      
+
+      protected buildQueryOptions(options?: ModelQueryOptions): ModelQueryOptions {
+        const { populate, lean, ...mongoOptions } = options || {};
+        return {
+          ...this.queryBuilder.buildOptions(mongoOptions),
+          populate,
+          lean
+        };
+      }
+
+      protected async handlePopulation<R extends ModelDocument<T> | ModelDocument<T>[] | null>(
         result: R,
         options?: ModelQueryOptions
       ): Promise<R> {
@@ -39,19 +52,5 @@ export abstract class BaseOperations<T extends SchemaType> extends BaseModel<T> 
         }
         
         return this.relationManager.populate(result, options.populate) as Promise<R>;
-      }
-
-      protected buildQueryOptions(options?: ModelQueryOptions): ModelQueryOptions {
-        return {
-          ...this.queryBuilder.buildOptions(options),
-          ...this.buildPopulateOptions(options)
-        }
-      }
-
-      private buildPopulateOptions(options?: ModelQueryOptions): Partial<ModelQueryOptions>{
-        if (!options?.populate) return {};
-        return {
-          projection: this.relationManager.getRequiredFields(options.populate)
-        }
       }
 }

@@ -2,7 +2,10 @@ import {CreateIndexesOptions, Document, FindOptions, ObjectId, } from 'mongodb'
 import {SchemaType} from './types'
 
 export type RelationType = "ONE_TO_ONE" | "ONE_TO_MANY" | "MANY_TO_ONE" | "MANY_TO_MANY"
-
+export interface BsonifyQueryOptions {
+    populate?: string[];
+    lean?: boolean;
+  }
 export interface ModelRelationConfig {
     type: RelationType,
     ref: string;
@@ -14,9 +17,9 @@ export interface ModelRelationConfig {
 export interface ModelIndexConfig extends CreateIndexesOptions {
     fields: Record<string, 1 | -1>
 }
-export interface ModelQueryOptions extends FindOptions {
-    populate?:string[];
-}
+// export interface ModelQueryOptions extends FindOptions {
+//     populate?:string[];
+// }
 
 export interface ModelDocument<T> extends Document {
     _id: ObjectId;
@@ -25,3 +28,5 @@ export interface ModelDocument<T> extends Document {
     deletedAt?: Date | null;
     [key: string]: unknown;
   }
+
+  export type ModelQueryOptions = FindOptions & BsonifyQueryOptions;
