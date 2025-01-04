@@ -1,6 +1,7 @@
 import {Db, MongoClient} from 'mongodb'
 import { Model } from './model/model';
 import { BsonifyOptions } from './types/types';
+import { IModelOperations } from './relationships/types';
 
 export class BsonifyClient {
     private client: MongoClient | null = null
@@ -61,4 +62,21 @@ export class BsonifyClient {
     registerModel(name:string, model:Model<any>):void{
         this.models.set(name, model)
     }
+
+    /**
+     * Retrieves a model registered with the client.
+     * 
+     * @param name The name of the model to retrieve.
+     * 
+     * @throws {Error} If the model is not found.
+     * 
+     * @returns The model instance.
+     */
+    getModel(name: string): IModelOperations {
+        const model = this.models.get(name);
+        if (!model) {
+          throw new Error(`Model ${name} not found`);
+        }
+        return model;
+      }
 }

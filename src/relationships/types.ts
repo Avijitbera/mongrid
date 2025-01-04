@@ -1,12 +1,11 @@
 import { Collection, Filter, FindOptions } from 'mongodb';
 import {RelationType} from '../types/model'
+import { BsonifyClient } from '../client';
 
 
 export interface IModelOperations {
     getCollection(): Collection;
-    client:{
-        getModel(name:string): IModelOperations;
-    };
+    client:BsonifyClient;
     findOne(filter: Filter<any>, options?: FindOptions): Promise<any>;
     find(filter: Filter<any>, options?: FindOptions): Promise<any[]>;
 
