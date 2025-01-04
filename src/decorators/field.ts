@@ -9,6 +9,10 @@ const VALIDATION_METADATA_KEY = 'validation'
 const TRANSFORM_METADATA_KEY = 'transform'
 const DESCRIPTION_METADATA_KEY = 'describe'
 
+/**
+ * Decorator to define a field in a model.
+ * @param options - Field options (e.g., required, default, index, etc.).
+ */
 export function Field(options:{
     required?:boolean;
     default?:any;
