@@ -36,14 +36,10 @@ export abstract class BaseModel<T extends SchemaType> implements IModelOperation
         this.indexes = new ModelIndexes(this.collection);
         this.relationManager = new RelationManager(this);
 
-        client.registerModel(name, this);
+        // client.registerModel(name, this);
     }
-    findOne(filter: Filter<any>, options?: FindOptions): Promise<any> {
-        throw new Error('Method not implemented.');
-    }
-    find(filter: Filter<any>, options?: FindOptions): Promise<any[]> {
-        throw new Error('Method not implemented.');
-    }
+    abstract findOne(filter: Filter<any>, options?: FindOptions): Promise<any>;
+    abstract find(filter: Filter<any>, options?: FindOptions): Promise<any[]>;
    
 
     getSchema(): Schema<T> {

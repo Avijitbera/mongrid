@@ -5,25 +5,41 @@ import { BsonifyClient } from '../client';
 import { Schema } from '../schema';
 import { ExtensionManager } from '../extensions/manager';
 import {ModelOperations} from './operations'
+import { ModelExtension } from '../extensions/types';
+import { ModelDocument } from '../types/model';
+import { ModelQueryOptions } from './types';
 
 export class Model<T extends SchemaType> extends ModelOperations<T>{
-    private collection: Collection;
-    private relationManager: RelationManager;
-    private extensionManager: ExtensionManager;
+    
+    private readonly extensionManager: ExtensionManager;
 
     constructor(
-        public client: BsonifyClient,
-        private name: string,
-        private schema: Schema<T>,
-        private options: ModelOptions = {}
+         client: BsonifyClient,
+         name: string,
+         schema: Schema<T>,
+         options: ModelOptions = {}
         
     ){
-        const collectionName = options.collection || name.toLowerCase();
-        this.collection = client.getDatabase().collection(collectionName);
-        this.relationManager = new RelationManager(this);
-        this.extensionManager = new ExtensionManager(this);
-        client.registerModel(name, this);
+       super(client,options, schema, name);
+       this.extensionManager = new ExtensionManager(this);
+       client.registerModel(name, this);
     }
 
+    extend(name:string, extensions: ModelExtension): void {
+        this.extensionManager.register(name, extensions);
+    }
+    async findOne(
+        filter: Filter<ModelDocument<T>>,
+        options?: ModelQueryOptions
+      ): Promise<ModelDocument<T> | null> {
+        return super.findOne(filter, options);
+      }
+    
+      async find(
+        filter: Filter<ModelDocument<T>>,
+        options?: ModelQueryOptions
+      ): Promise<ModelDocument<T>[]> {
+        return super.find(filter, options);
+      }
     
 }
