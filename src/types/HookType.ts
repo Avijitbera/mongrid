@@ -1,6 +1,6 @@
 
 
-type HookType = "preSave" 
+export type HookType = "preSave" 
 | "postSave" |
 "preUpdate" |
 "postUpdate" |
