@@ -8,6 +8,6 @@ const COLLECTION_METADATA_KEY = 'collection'
  */
 export function Collection(name:string){
     return function (target: Function){
-        Reflect.defineMetadata(COLLECTION_METADATA_KEY, name, target)
+        
     }
 }
