@@ -70,10 +70,79 @@ export class Model<T extends Document> {
         }
     }
 
+    async ensureSchemaValidation(): Promise<void> {
+        const validator: { $jsonSchema: any } = {
+            $jsonSchema: {
+                bsonType: 'object',
+                required: [],
+                properties: {},
+            },
+        };
+
+        for(const [name, field] of Object.entries(this.fields)){
+            const fieldOptions = field.getOptions()
+            if(fieldOptions.required){
+                validator.$jsonSchema.required.push(name);
+            }
+
+            validator.$jsonSchema.properties[name] = {
+            
+                bsonType: this.getBsonType(fieldOptions.type),
+            }
+
+            // if(fieldOptions.default !== undefined){
+            //     validator.$jsonSchema.properties[name].default = fieldOptions.default
+            // }
+
+            await this.db.getDatabase().command({
+                collMod: this.collection.collectionName,
+                validator
+            })
+        }
+    }
+
     async save(data: OptionalUnlessRequiredId<T>): Promise<ObjectId> {
-        
+        for (const [fieldName, field] of Object.entries(this.fields)) {
+            const fieldOptions = field.getOptions();
+            if (fieldOptions.required && data[fieldName] === undefined) {
+                throw new Error(`Missing required field: ${fieldName}`);
+            }
+        }
+
+        for(const [fieldName, field] of Object.entries(this.fields)){
+            const fieldOptions = field.getOptions();
+            if(fieldOptions.default !== undefined && data[fieldName] === undefined){
+                data[fieldName] = fieldOptions.default;
+            }
+        }
+
+        for (const [fieldName, field] of Object.entries(this.fields)) {
+            const fieldOptions = field.getOptions();
+            if(fieldOptions.transform && data[fieldName] !== undefined){
+                data[fieldName] = fieldOptions.transform(data[fieldName]);
+                
+            }
+        }
+
+        const aliasedData:any = {}
+        for(const [fieldName, field] of Object.entries(this.fields)){
+            const fieldOptions = field.getOptions();
+            const alias = fieldOptions.alias || fieldName;
+            aliasedData[alias] = data[fieldName];
+        }
+        await this.ensureSchemaValidation();
         await this.ensureIndexes();
         const result = await this.collection.insertOne(data);
         return result.insertedId!;
+    }
+
+    private getBsonType(type: any): string{
+        if(type === String) return 'string';
+        if(type === Number) return 'number';
+        if(type === Boolean) return 'bool';
+        if(type === Date) return 'date';
+        if(type === Array) return 'array';
+        if(type === Object) return 'object';
+        return 'string'
     }
 }

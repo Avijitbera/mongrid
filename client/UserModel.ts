@@ -22,6 +22,7 @@ export type Account = {
     isVerified?:boolean;
     createdAt?:Date;
     imageUrl: string;
+    address:string;
 };
 
 export class AccountModel extends Model<Account> {

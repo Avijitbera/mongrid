@@ -11,4 +11,8 @@ export class Database {
     getModel<T extends Document>(collectionName: string): Model<T> {
         return new Model<T>(new Database(this.db), collectionName);
     }
+
+    getDatabase(): Db {
+        return this.db;
+    }
 }

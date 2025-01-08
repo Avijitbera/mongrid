@@ -24,13 +24,17 @@ const main = async() =>{
     .addField("imageUrl", new FieldBuilder<string>("imageUrl").required().type(String).build())
     .addField('isVerified', new FieldBuilder<boolean>("isVerified").default(false).type(Boolean).build())
     .addField('createdAt', new FieldBuilder<Date>("createdAt").default(new Date()).type(Date).build())
+    .addField('age', new FieldBuilder<number>("age").required().type(Number).build())
+    .addField("type", new FieldBuilder<string>("type").type(String).default("user").build())
+    .addField("address", new FieldBuilder<string>("address").required().type(String).build())
     .build();
 
     const id = await accountModel.save({
         age:34,
-        email:"mail1@mail.com",
+        email:"mail109@mail.com",
         imageUrl:"imageUrl",
         name:"test",
+        address:"kolkata"
 
     })
     console.log(id)
