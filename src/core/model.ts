@@ -51,15 +51,28 @@ export class Model<T extends Document> {
                 }
             }
         }
-        if(field.getOptions().index){
-            
+        const fieldOptions = field.getOptions()
+        if(fieldOptions.index
+            || fieldOptions.unique
+        ){
+           const indexOptions: IndexDescription = {
+            key: {[name]:1},
+            unique: fieldOptions.unique || false,
+           } 
+           this.indexes.push(indexOptions)
         }
         return this;
     }
 
+    async ensureIndexes(): Promise<void> {
+        if (this.indexes.length > 0) {
+            await this.collection.createIndexes(this.indexes);
+        }
+    }
+
     async save(data: OptionalUnlessRequiredId<T>): Promise<ObjectId> {
         
-
+        await this.ensureIndexes();
         const result = await this.collection.insertOne(data);
         return result.insertedId!;
     }

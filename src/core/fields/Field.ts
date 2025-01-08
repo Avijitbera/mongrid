@@ -20,6 +20,11 @@ export class Field<T> {
 
     constructor(private name: string){}
 
+    required():this {
+        this.options.required = true;
+        return this;
+    }
+
     unique():this {
         this.options.unique = true;
         return this;
@@ -53,16 +58,16 @@ export class Field<T> {
         return this;
     }
 
-    addHook(hookType: HookType, hook: Hook<T>): this {
-        if(!this.options.hooks){
-            this.options.hooks = {};
-        }
-        if(!this.options.hooks[hookType]){
-            this.options.hooks[hookType] = [];
-        }
-        this.options.hooks[hookType].push(hook);
-        return this;
-    }
+    // addHook(hookType: HookType, hook: Hook<T>): this {
+    //     if(!this.options.hooks){
+    //         this.options.hooks = {};
+    //     }
+    //     if(!this.options.hooks[hookType]){
+    //         this.options.hooks[hookType] = [];
+    //     }
+    //     this.options.hooks[hookType].push(hook);
+    //     return this;
+    // }
 
     alias(alias: string): this {
         this.options.alias = alias;

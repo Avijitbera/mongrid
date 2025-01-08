@@ -13,3 +13,19 @@ export class UserModel extends Model<User> {
         super(db, 'users');
     }
 }
+
+export type Account = {
+    // _id?: ObjectId;
+    name: string;
+    email: string;
+    age: number;
+    isVerified?:boolean;
+    createdAt?:Date;
+    imageUrl: string;
+};
+
+export class AccountModel extends Model<Account> {
+    constructor(db: Database) {
+        super(db, 'account');
+    }
+}
