@@ -1,7 +1,7 @@
 import { Db, MongoClient } from "mongodb";
 
 
-class Connection {
+export class Connection {
     private client: MongoClient;
     private db: Db | null = null;
 
