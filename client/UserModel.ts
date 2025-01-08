@@ -1,5 +1,6 @@
 import { Db, ObjectId } from "mongodb";
 import {Model} from '../src/core/model'
+import { Database } from "../src/core/Database";
 export type User = {
     // _id?: ObjectId;
     name: string;
@@ -8,7 +9,7 @@ export type User = {
 };
 
 export class UserModel extends Model<User> {
-    constructor(db: Db) {
+    constructor(db: Database) {
         super(db, 'users');
     }
 }
