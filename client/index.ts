@@ -80,7 +80,7 @@ const main = async() =>{
 
     const id = await accountModel.save({
         age:34,
-        email:"mail439mail.com",
+        email:"mail@431mail.com",
         imageUrl:"imageUrl",
         name:"test",
         address:{

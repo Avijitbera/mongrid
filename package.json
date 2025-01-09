@@ -1,20 +1,23 @@
 {
-  "name": "bsonify",
+  "name": "bongo",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A MongoDB ORM for Node.js and TypeScript",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "keywords": ["mongodb", "orm", "typescript", "nodejs"],
   "scripts": {
     "build": "tsc",
     "lint": "prettier --check .",
     "lint:fix": "prettier --write .",
-    "test": "jest"
+    "test": "jest",
+    "publish": "npm publish --access public"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Avijit bera, avijitbera775@gmail.com",
+  "license": "MIT",
   "dependencies": {
-    "mongodb": "^6.12.0",
-    "prettier": "^3.4.2",
-    "reflect-metadata": "^0.2.2"
+    "mongodb": "^6.12.0"
+    
+    
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
@@ -23,7 +26,8 @@
     "dotenv": "^16.4.7",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.5",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "prettier": "^3.4.2"
   },
   "prettier": {
     "semi": true,
