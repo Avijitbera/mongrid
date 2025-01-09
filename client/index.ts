@@ -10,6 +10,45 @@ import { Field } from "../src/core/fields/Field";
 import { FieldBuilder } from "../src/core/fields/FieldBuilder";
 import { exit } from "process";
 import { NestedField } from "../src/core/fields/NestedField";
+import { Validator } from "../src/core/validators/Validator";
+
+class EmailAndAgeValidator<T extends Account> extends Validator<T> {
+    validate(document: T): { email?: string[]; age?: string[] } {
+        const errors: { email?: string[]; age?: string[] } = {};
+
+        // Validate email
+        const emailErrors: string[] = [];
+        if (!document.email.includes('@')) {
+            emailErrors.push('Email must contain "@"');
+        }
+        if (!document.email.endsWith('.com')) {
+            emailErrors.push('Email must end with ".com"');
+        }
+        if (emailErrors.length > 0) {
+            errors.email = emailErrors;
+        }
+
+        // Validate age
+        const ageErrors: string[] = [];
+        if (document.age < 18) {
+            ageErrors.push('Age must be at least 18');
+        }
+        if (document.age > 100) {
+            ageErrors.push('Age must be at most 100');
+        }
+        if (ageErrors.length > 0) {
+            errors.age = ageErrors;
+        }
+
+        return errors;
+    }
+}
+
+class LogSaveHook<T> implements Hook<T>{
+    async execute(data: T): Promise<void> {
+        console.log(`Saving data: ${JSON.stringify(data)}`);
+    }
+}
 
 const main = async() =>{
     dotenv.config();
@@ -27,18 +66,21 @@ const main = async() =>{
 
     const accountModel = new ModelBuilder<Account>(db, 'accounts')
     .addField("name", new FieldBuilder<string>("name").required().type(String).build())
-    .addField("email", new FieldBuilder<string>("email").type(String).unique().required().build())
+    .addField("email", new FieldBuilder<string>("email").type(String).unique().required()
+    .build())
     .addField("imageUrl", new FieldBuilder<string>("imageUrl").required().type(String).build())
     .addField('isVerified', new FieldBuilder<boolean>("isVerified").default(false).type(Boolean).build())
     .addField('createdAt', new FieldBuilder<Date>("createdAt").default(new Date()).type(Date).build())
     .addField('age', new FieldBuilder<number>("age").required().type(Number).build())
     .addField("type", new FieldBuilder<string>("type").type(String).default("user").build())
     .addNestedField("address", addressField)
+    .addHook(HookType.PostSave, new LogSaveHook())
+    .addValidator(new EmailAndAgeValidator())
     .build();
 
     const id = await accountModel.save({
         age:34,
-        email:"mail431@mail.com",
+        email:"mail439mail.com",
         imageUrl:"imageUrl",
         name:"test",
         address:{

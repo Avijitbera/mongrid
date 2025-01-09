@@ -49,6 +49,36 @@ export class Model<T extends Document> {
         return this;
     }
 
+    private async validateDocument(document: T | OptionalUnlessRequiredId<T>): Promise<void>{
+        // Check for required fields
+        for (const [fieldName, field] of Object.entries(this.fields)) {
+            const fieldOptions = field.getOptions();
+            if (fieldOptions.required && document[fieldName] === undefined) {
+                throw new Error(`Missing required field: ${fieldName}`);
+            }
+        }
+
+        // Run all validators
+        const errors: { [key in keyof T]?: string[] } = {};
+        for (const validator of this.validators) {
+            const validatorErrors = validator.validate(document as T);
+            for (const [field, fieldErrors] of Object.entries(validatorErrors)) {
+                if (!errors[field]) {
+                    errors[field as keyof T] = [];
+                }
+                errors[field]!.push(...fieldErrors!);
+            }
+        }
+
+        if (Object.keys(errors).length > 0) {
+            const errorMessages = Object.entries(errors)
+                .map(([field, fieldErrors]) => `${field}: ${fieldErrors!.join(', ')}`)
+                .join('; ');
+            throw new Error(errorMessages);
+        }
+
+    }
+
     addField(name:string, field: Field<any>):this{
         this.fields[name] = field
         const fieldOptions = field.getOptions();
@@ -154,7 +184,8 @@ export class Model<T extends Document> {
     }
 
     async save(data: OptionalUnlessRequiredId<T>): Promise<ObjectId> {
-        
+        await this.validateDocument(data);
+
         for (const [fieldName, field] of Object.entries(this.fields)) {
             const fieldOptions = field.getOptions();
             if (fieldOptions.required && data[fieldName] === undefined) {

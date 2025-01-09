@@ -1,13 +1,11 @@
+import { OptionalUnlessRequiredId } from "mongodb";
 
 export abstract class Validator<T> {
-    /**
-     * The error message to return if validation fails.
+   
+   /**
+     * Validates the given document.
+     * @param document The document to validate.
+     * @returns An object where keys are field names and values are arrays of error messages.
      */
-    abstract message: string;
-    /**
-     * Validates the given value.
-     * @param value The value to validate.
-     * @returns `true` if the value is valid, `false` otherwise.
-     */
-    abstract validate(value: T): boolean
+   abstract validate(document: T): { [key in keyof T]?: string[] };
 }
