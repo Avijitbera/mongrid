@@ -36,6 +36,14 @@ export class Model<T extends Document> {
         return this;
     }
 
+    private async executeHooks(type: HookType, document: T): Promise<void>{
+        if (this.hooks[type]) {
+            for (const hook of this.hooks[type]!) {
+                await hook.execute(document);
+            }
+        }
+    }
+
     addValidator(validator: Validator<T>): this {
         this.validators.push(validator);
         return this;
@@ -43,7 +51,7 @@ export class Model<T extends Document> {
 
     addField(name:string, field: Field<any>):this{
         this.fields[name] = field
-
+        const fieldOptions = field.getOptions();
         const fieldHooks = field.getOptions().hooks;
         if(fieldHooks){
             for(const [hookType, hooks] of Object.entries(fieldHooks)){
@@ -52,7 +60,14 @@ export class Model<T extends Document> {
                 }
             }
         }
-        const fieldOptions = field.getOptions()
+
+        if(fieldOptions.validators){
+            for(const validator of fieldOptions.validators){
+                this.addValidator(validator)
+            }
+        }
+
+      
         if(fieldOptions.index
             || fieldOptions.unique
         ){
@@ -61,6 +76,20 @@ export class Model<T extends Document> {
             unique: fieldOptions.unique || false,
            } 
            this.indexes.push(indexOptions)
+        }
+        if(field instanceof NestedField){
+            for (const [nestedFieldName, nestedField] of Object.entries(field.getFields())){
+                const nestedFieldOptions = nestedField.getOptions();
+                if(nestedFieldOptions.index
+                    || nestedFieldOptions.unique
+                ){
+                   const indexOptions: IndexDescription = {
+                    key: {[name]:1},
+                    unique: nestedFieldOptions.unique || false,
+                   } 
+                   this.indexes.push(indexOptions)
+                }
+            }
         }
         return this;
     }
@@ -96,7 +125,25 @@ export class Model<T extends Document> {
             // }
 
             if(field instanceof NestedField){
-                validator.$jsonSchema.properties[name] = field.getOptions()
+                validator.$jsonSchema.properties[name] = {
+                    bsonType: 'object',
+                    required: [],
+                    properties: {},
+                };
+
+                for (const [nestedFieldName, nestedField] of Object.entries(field.getFields())){
+                    const nestedFieldOptions = nestedField.getOptions();
+
+                // Add to required array if the nested field is required
+                if (nestedFieldOptions.required) {
+                    validator.$jsonSchema.properties[name].required.push(nestedFieldName);
+                }
+
+                // Add nested field properties to the schema
+                validator.$jsonSchema.properties[name].properties[nestedFieldName] = {
+                    bsonType: this.getBsonType(nestedFieldOptions.type),
+                };
+                }
             }
 
             await this.db.getDatabase().command({
@@ -140,7 +187,7 @@ export class Model<T extends Document> {
             }
         }
     }
-        console.log({data})
+        
         for (const [fieldName, field] of Object.entries(this.fields)) {
             const fieldOptions = field.getOptions();
             if(fieldOptions.transform && data[fieldName] !== undefined){
@@ -174,7 +221,9 @@ export class Model<T extends Document> {
         
         await this.ensureSchemaValidation();
         await this.ensureIndexes();
+        await this.executeHooks(HookType.PreSave, aliasedData);
         const result = await this.collection.insertOne(aliasedData);
+        await this.executeHooks(HookType.PostSave, aliasedData);
         return result.insertedId!;
     }
 
