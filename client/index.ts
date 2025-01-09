@@ -38,13 +38,13 @@ const main = async() =>{
 
     const id = await accountModel.save({
         age:34,
-        email:"mail119@mail.com",
+        email:"mail211@mail.com",
         imageUrl:"imageUrl",
         name:"test",
         address:{
-            city:"city",
-            state:"state",
-            country:"country"
+            // city:"city12",
+            state:"state1200",
+            country:"country1200"
         }
 
     })
