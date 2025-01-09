@@ -5,6 +5,7 @@ import { Database } from './Database';
 import { Field } from './fields/Field';
 import { Hook } from './hooks/Hook';
 import { Validator } from './validators/Validator';
+import { NestedField } from './fields/NestedField';
 interface BaseDocument {
     _id?: ObjectId;
 }
@@ -113,6 +114,16 @@ export class Model<T extends Document> {
             const fieldOptions = field.getOptions();
             if(fieldOptions.default !== undefined && data[fieldName] === undefined){
                 data[fieldName] = fieldOptions.default;
+            }
+
+            if(field instanceof NestedField && data[fieldName] !== undefined){
+                data[fieldName] = {}
+                for(const [nestedFieldName, nestedField] of Object.entries(field.getFields())){
+                    const nestedFieldOptions = nestedField.getOptions();
+                    if(nestedFieldOptions.default !== undefined){
+                        data[fieldName][nestedFieldName] = nestedFieldOptions.default;
+                    }
+                }
             }
         }
 

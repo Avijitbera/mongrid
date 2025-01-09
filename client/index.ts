@@ -9,6 +9,7 @@ import { Hook } from "../src/core/hooks/Hook";
 import { Field } from "../src/core/fields/Field";
 import { FieldBuilder } from "../src/core/fields/FieldBuilder";
 import { exit } from "process";
+import { NestedField } from "../src/core/fields/NestedField";
 
 const main = async() =>{
     dotenv.config();
@@ -18,7 +19,13 @@ const main = async() =>{
     await connection.connect('bsonify');
     const db = new Database(connection.getDatabase()!);
 
-    const accountModel = new ModelBuilder<Account>(db, 'account')
+    const addressField = new NestedField<object>("address")
+    .addField("city", new FieldBuilder<string>("city").required().type(String).build())
+    .addField("state", new FieldBuilder<string>("state").required().type(String).build())
+    .addField("country", new FieldBuilder<string>("country").required().type(String).build())
+    
+
+    const accountModel = new ModelBuilder<Account>(db, 'accounts')
     .addField("name", new FieldBuilder<string>("name").required().type(String).build())
     .addField("email", new FieldBuilder<string>("email").type(String).unique().required().build())
     .addField("imageUrl", new FieldBuilder<string>("imageUrl").required().type(String).build())
@@ -26,15 +33,19 @@ const main = async() =>{
     .addField('createdAt', new FieldBuilder<Date>("createdAt").default(new Date()).type(Date).build())
     .addField('age', new FieldBuilder<number>("age").required().type(Number).build())
     .addField("type", new FieldBuilder<string>("type").type(String).default("user").build())
-    .addField("address", new FieldBuilder<string>("address").required().type(String).build())
+    .addNestedField("address", addressField)
     .build();
 
     const id = await accountModel.save({
         age:34,
-        email:"mail109@mail.com",
+        email:"mail119@mail.com",
         imageUrl:"imageUrl",
         name:"test",
-        address:"kolkata"
+        address:{
+            city:"city",
+            state:"state",
+            country:"country"
+        }
 
     })
     console.log(id)

@@ -36,6 +36,11 @@ export class ModelBuilder<T extends Document>{
         return this;
     }
 
+    addNestedField(name: string, nestedField: Field<any>): this {
+        this.fields[name] = nestedField;
+        return this;
+    }
+
     addHook(type: HookType, hook: Hook<T>): this {
         if(!this.hooks[type]){
             this.hooks[type] = [];

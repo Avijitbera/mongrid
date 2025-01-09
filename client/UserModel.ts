@@ -22,11 +22,11 @@ export type Account = {
     isVerified?:boolean;
     createdAt?:Date;
     imageUrl: string;
-    address:string;
+    address:object;
 };
 
 export class AccountModel extends Model<Account> {
     constructor(db: Database) {
-        super(db, 'account');
+        super(db, 'accounts');
     }
 }
