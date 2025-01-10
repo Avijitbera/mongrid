@@ -218,7 +218,7 @@ createUser().catch(console.error);
 
 ## Contributing
 
-We welcome contributions from the community! Please read our [Contribution Guidelines](./src/docs/CONTRIBUTING.md) to get started.
+We welcome contributions from the community! Please read our [Contribution Guidelines](./docs/CONTRIBUTING.md) to get started.
 
 ---
 
