@@ -6,9 +6,7 @@ import { Field } from './fields/Field';
 import { Hook } from './hooks/Hook';
 import { Validator } from './validators/Validator';
 import { NestedField } from './fields/NestedField';
-interface BaseDocument {
-    _id?: ObjectId;
-}
+
 
 export class Model<T extends Document> {
     private collection: Collection<T>;
@@ -28,6 +26,12 @@ export class Model<T extends Document> {
         this.collection = db.getCollection<T>(collectionName);
     }
 
+    /**
+     * Add a hook to be executed when a certain event occurs.
+     * @param type The event type (e.g. preSave, postSave, preUpdate, postUpdate, preRemove, postRemove)
+     * @param hook The hook to be executed.
+     * @returns The model instance.
+     */
     addHook(type: HookType, hook: Hook<T>): this {
         if(!this.hooks[type]){
             this.hooks[type] = [];
@@ -35,6 +39,13 @@ export class Model<T extends Document> {
         this.hooks[type].push(hook);
         return this;
     }
+
+/**
+ * Executes all hooks of a given type for the specified document.
+ * @param type The type of the hooks to execute (e.g., preSave, postSave).
+ * @param document The document being processed through the hooks.
+ * @returns A promise that resolves when all hooks have been executed.
+ */
 
     private async executeHooks(type: HookType, document: T): Promise<void>{
         if (this.hooks[type]) {
