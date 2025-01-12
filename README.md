@@ -1,3 +1,4 @@
+
 # Mongrid ORM
 
 A lightweight, type-safe MongoDB ORM for Node.js and TypeScript. Easily define models, fields, validations, and hooks for your MongoDB collections.
@@ -12,9 +13,13 @@ A lightweight, type-safe MongoDB ORM for Node.js and TypeScript. Easily define m
 4. [Field Builders](#field-builders)
 5. [Validations](#validations)
 6. [Hooks](#hooks)
-7. [Example Usage](#example-usage)
-8. [Contributing](#contributing)
-9. [License](#license)
+7. [Relationships](#relationships)
+8. [Querying Data](#querying-data)
+   - [find](#find)
+   - [findById](#findbyid)
+9. [Example Usage](#example-usage)
+10. [Contributing](#contributing)
+11. [License](#license)
 
 ---
 
@@ -33,7 +38,7 @@ npm install mongrid
 To connect to your MongoDB database, create a `Database` instance:
 
 ```typescript
-import { Database } from 'mongrid';
+import { Database, Connection } from 'mongrid';
 
 const connection = new Connection(`mongodb+srv://${user}:${password}@localhost:27017/`);
     await connection.connect('mydatabase');
@@ -166,6 +171,88 @@ const userModel = new ModelBuilder<User>(db, 'users')
 
 ---
 
+## Relationships
+
+Mongrid supports **One-to-One**, **One-to-Many**, and **Many-to-Many** relationships between models. You can define relationships using the `addOneToOne`, `addOneToMany`, and `addManyToMany` methods.
+
+### **Example: One-to-One Relationship**
+
+```typescript
+const postModel = new ModelBuilder<Post>(db, 'posts')
+    .addField('title', new FieldBuilder<string>('title').required().type(String).build())
+    .addField('content', new FieldBuilder<string>('content').required().type(String).build())
+    .addField('author', new FieldBuilder<ObjectId>('author').required().type(ObjectId).build())
+    .addOneToOne('author', userModel, 'author', true) // Cascade delete
+    .build();
+```
+
+### **Example: One-to-Many Relationship**
+
+```typescript
+const commentModel = new ModelBuilder<Comment>(db, 'comments')
+    .addField('text', new FieldBuilder<string>('text').required().type(String).build())
+    .addField('postId', new FieldBuilder<ObjectId>('postId').required().type(ObjectId).build())
+    .addOneToMany('postId', postModel, 'comments', true) // Cascade delete
+    .build();
+```
+
+### **Example: Many-to-Many Relationship**
+
+```typescript
+const tagModel = new ModelBuilder<Tag>(db, 'tags')
+    .addField('name', new FieldBuilder<string>('name').required().type(String).build())
+    .build();
+
+const postModel = new ModelBuilder<Post>(db, 'posts')
+    .addField('tags', new FieldBuilder<ObjectId[]>('tags').type(Array).build())
+    .addManyToMany('tags', tagModel, 'posts', true) // Cascade delete
+    .build();
+```
+
+---
+
+## Querying Data
+
+Mongrid provides methods to query data from your collections, including `find` and `findById`.
+
+### **find**
+
+The `find` method allows you to query documents with optional population of related fields.
+
+#### **Example: Find All Posts**
+
+```typescript
+const posts = await postModel.find({});
+console.log(posts);
+```
+
+#### **Example: Find Posts with Populated Author**
+
+```typescript
+const posts = await postModel.find({}, {}, ['author']);
+console.log(posts);
+```
+
+### **findById**
+
+The `findById` method allows you to find a document by its ID and optionally populate related fields.
+
+#### **Example: Find a Post by ID**
+
+```typescript
+const post = await postModel.findById(postId);
+console.log(post);
+```
+
+#### **Example: Find a Post by ID with Populated Author**
+
+```typescript
+const post = await postModel.findById(postId, ['author']);
+console.log(post);
+```
+
+---
+
 ## Example Usage
 
 Here’s a complete example of using the MongoDB ORM:
@@ -184,6 +271,13 @@ interface User {
     };
 }
 
+// Define the Post type
+interface Post {
+    title: string;
+    content: string;
+    author: ObjectId;
+}
+
 // Connect to the database
 const db = new Database('mongodb://localhost:27017', 'mydatabase');
 
@@ -196,6 +290,14 @@ const userModel = new ModelBuilder<User>(db, 'users')
         .addField('city', new FieldBuilder<string>('city').required().type(String).build())
         .addField('country', new FieldBuilder<string>('country').required().type(String).build())
     )
+    .build();
+
+// Define the Post model
+const postModel = new ModelBuilder<Post>(db, 'posts')
+    .addField('title', new FieldBuilder<string>('title').required().type(String).build())
+    .addField('content', new FieldBuilder<string>('content').required().type(String).build())
+    .addField('author', new FieldBuilder<ObjectId>('author').required().type(ObjectId).build())
+    .addOneToOne('author', userModel, 'author', true) // Cascade delete
     .build();
 
 // Save a user
@@ -211,9 +313,35 @@ async function createUser() {
     });
 
     console.log('User saved with ID:', userId);
+    return userId;
 }
 
-createUser().catch(console.error);
+// Save a post
+async function createPost(userId: ObjectId) {
+    const postId = await postModel.save({
+        title: 'My First Post',
+        content: 'This is a test post.',
+        author: userId,
+    });
+
+    console.log('Post saved with ID:', postId);
+    return postId;
+}
+
+// Find a post with populated author
+async function findPost(postId: ObjectId) {
+    const post = await postModel.findById(postId, ['author']);
+    console.log('Post with populated author:', post);
+}
+
+// Main function
+async function main() {
+    const userId = await createUser();
+    const postId = await createPost(userId);
+    await findPost(postId);
+}
+
+main().catch(console.error);
 ```
 
 ---
@@ -230,4 +358,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ---
 
-This README provides a clear and concise guide for users to get started with your MongoDB ORM package. You can customize it further based on your package's specific features and requirements.
+This updated `README.md` now includes detailed sections on **relationships**, **find**, and **findById** functionality, making it easier for users to understand and use these features in your ORM.
