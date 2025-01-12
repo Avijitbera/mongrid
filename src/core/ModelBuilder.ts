@@ -126,7 +126,9 @@ export class ModelBuilder<T extends Document>{
 
     build(): Model<T>{
         const model = new Model<T>(this.db, this.collectionName);
-        
+        for(const [fieldName, relationship] of Object.entries(this.relationships)){
+            model.addRelationship(fieldName, relationship);
+        }
         for(const [name, field] of Object.entries(this.fields)){
             model.addField(name, field);
         }

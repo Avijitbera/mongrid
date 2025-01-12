@@ -239,6 +239,14 @@ export class Model<T extends Document> {
 
         return document[0] || null;
     }
+
+    addRelationship<R extends Document>(
+        fieldName: keyof T & string,
+        relationshipMetadata: RelationshipMetadata<T, R>,
+    ): this{
+        this.relationships[fieldName] = relationshipMetadata;
+        return this
+    }
     
 
     async save(data: OptionalUnlessRequiredId<T>): Promise<ObjectId> {
@@ -255,7 +263,10 @@ export class Model<T extends Document> {
             const foreignKeyValue = data[fieldName];
             if(foreignKeyValue){
                 const relatedModel = relationship.relatedModel;
-                // const relatedDocument = await relatedModel.findOne(foreignKeyValue);
+                const relatedDocument = await relatedModel.findById(foreignKeyValue);
+                if(!relatedDocument){
+                    throw new Error(`Foreign key violation: ${fieldName} references a non-existent document.`)
+                }
             }
         }
 
