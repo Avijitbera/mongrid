@@ -143,6 +143,16 @@ export class Model<T extends Document> {
         }
     }
 
+    private async ensureCollection(): Promise<void>  {
+        const collections = await this.db.getDatabase().listCollections({
+            name: this.collection.collectionName
+        }).toArray();
+        if(collections.length === 0){
+            await this.db.getDatabase().createCollection(this.collection.collectionName);
+        }
+        await this.ensureSchemaValidation()
+    }
+
     async ensureSchemaValidation(): Promise<void> {
         const validator: { $jsonSchema: any } = {
             $jsonSchema: {
@@ -188,12 +198,16 @@ export class Model<T extends Document> {
                 };
                 }
             }
-
-            await this.db.getDatabase().command({
-                collMod: this.collection.collectionName,
-                validator
-            })
+           
         }
+        
+
+        await this.db.getDatabase().command({
+            collMod: this.collection.collectionName,
+            validator,
+            validationLevel: 'strict',
+        validationAction: 'error',
+        })
     }
 
     async find<K extends keyof T>(
@@ -247,9 +261,12 @@ export class Model<T extends Document> {
         this.relationships[fieldName] = relationshipMetadata;
         return this
     }
+
+   
     
 
     async save(data: OptionalUnlessRequiredId<T>): Promise<ObjectId> {
+    await this.ensureCollection();
         await this.validateDocument(data);
 
         for (const [fieldName, field] of Object.entries(this.fields)) {
@@ -261,9 +278,11 @@ export class Model<T extends Document> {
 
         for (const [fieldName, relationship] of Object.entries(this.relationships)){
             const foreignKeyValue = data[fieldName];
+            
             if(foreignKeyValue){
                 const relatedModel = relationship.relatedModel;
                 const relatedDocument = await relatedModel.findById(foreignKeyValue);
+                
                 if(!relatedDocument){
                     throw new Error(`Foreign key violation: ${fieldName} references a non-existent document.`)
                 }
@@ -305,6 +324,7 @@ export class Model<T extends Document> {
         }
         
 
+        
         const aliasedData:any = {}
         for(const [fieldName, field] of Object.entries(this.fields)){
             const fieldOptions = field.getOptions();
@@ -326,7 +346,7 @@ export class Model<T extends Document> {
                 aliasedData[alias] = data[fieldName];
             }
         }
-        
+       
         await this.ensureSchemaValidation();
         await this.ensureIndexes();
         await this.executeHooks(HookType.PreSave, aliasedData);
@@ -342,6 +362,7 @@ export class Model<T extends Document> {
         if(type === Date) return 'date';
         if(type === Array) return 'array';
         if(type === Object) return 'object';
+        if(type == ObjectId) return 'objectId';
         return 'string'
     }
 }

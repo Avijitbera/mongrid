@@ -11,7 +11,7 @@ import { FieldBuilder } from "../src/core/fields/FieldBuilder";
 import { exit } from "process";
 import { NestedField } from "../src/core/fields/NestedField";
 import { Validator } from "../src/core/validators/Validator";
-
+import {ObjectId} from '../src/types/index'
 class EmailAndAgeValidator<T extends Account> extends Validator<T> {
     validate(document: T): { email?: string[]; age?: string[] } {
         const errors: { email?: string[]; age?: string[] } = {};
@@ -57,6 +57,7 @@ const main = async() =>{
     const connection = new Connection(`mongodb+srv://${user}:${password}@cluster0.x8mcxdp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`);
     await connection.connect('bsonify');
     const db = new Database(connection.getDatabase()!);
+    // await db.getDatabase().createCollection("posts");
 
     const addressField = new NestedField<object>("address")
     .addField("city", new FieldBuilder<string>("city").required().type(String).build())
@@ -64,10 +65,7 @@ const main = async() =>{
     .addField("country", new FieldBuilder<string>("country").required().type(String).build())
     
 
-    const postModel = new ModelBuilder<Post>(db, 'posts')
-    .addField('title', new FieldBuilder<string>("title").required().type(String).build())
-    .addField('content', new FieldBuilder<string>("content").required().type(String).build())
-    .build();
+   
 
     const accountModel = new ModelBuilder<Account>(db, 'accounts')
     .addField("name", new FieldBuilder<string>("name").required().type(String).build())
@@ -83,21 +81,48 @@ const main = async() =>{
     .addValidator(new EmailAndAgeValidator())
     .build();
 
+    const postModel = new ModelBuilder<Post>(db, 'posts')
+    .addField('title', new FieldBuilder<string>("title").required().type(String).build())
+    .addField('content', new FieldBuilder<string>("content").required().type(String).build())
+    .addField('author', new FieldBuilder<ObjectId>("author").required().type(ObjectId).build()) 
+    .addOneToOne("author", accountModel, 'author', false)
+    .build();
+
     
 
-    // const id = await accountModel.save({
-    //     age:34,
-    //     email:"mail@431mail.com",
-    //     imageUrl:"imageUrl",
-    //     name:"test",
-    //     address:{
-    //         city:"city12",
-    //         state:"state1200",
-    //         country:"country1200"
-    //     }
+    const id = await accountModel.save({
+        age:34,
+        email:"mail514@mail.com",
+        imageUrl:"imageUrl",
+        name:"test",
+        address:{
+            city:"city12",
+            state:"state1200",
+            country:"country1200"
+        }
+
+    })
+    console.log({id})
+
+    try {
+        const postId = await postModel.save({
+            content: "This is test12",
+            title: "Test 1234",
+            author: id
+        });
+        console.log({ postId });
+    } catch (error:any) {
+        
+    }
+    // const postId = await postModel.save({
+    //     content:"This is test12",
+    //     title:"Test 1234",
+    //     author:id,
+
 
     // })
-    // console.log(id)
+   
+    // console.log({postId})
     exit(0)
    
 }

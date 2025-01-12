@@ -25,16 +25,16 @@ export type Account = {
     address:object;
 };
 
-export class AccountModel extends Model<Account> {
-    constructor(db: Database) {
-        super(db, 'accounts');
-    }
-}
+// export class AccountModel extends Model<Account> {
+//     constructor(db: Database) {
+//         super(db, 'accounts');
+//     }
+// }
 
 export interface Post {
     _id?: ObjectId;
     title: string;
     content: string;
     author: ObjectId; // Foreign key to User
-    comments?: ObjectId[]; // Foreign keys to Comment (One-to-Many)
+    
 }
