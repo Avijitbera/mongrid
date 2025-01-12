@@ -1,6 +1,6 @@
 {
   "name": "mongrid",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "A MongoDB ORM for Node.js and TypeScript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

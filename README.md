@@ -1,4 +1,3 @@
-
 # Mongrid ORM
 
 A lightweight, type-safe MongoDB ORM for Node.js and TypeScript. Easily define models, fields, validations, and hooks for your MongoDB collections.
@@ -18,6 +17,8 @@ A lightweight, type-safe MongoDB ORM for Node.js and TypeScript. Easily define m
    - [find](#find)
    - [findById](#findbyid)
 9. [Example Usage](#example-usage)
+   - [TypeScript](#typescript-example)
+   - [JavaScript](#javascript-example)
 10. [Contributing](#contributing)
 11. [License](#license)
 
@@ -37,12 +38,24 @@ npm install mongrid
 
 To connect to your MongoDB database, create a `Database` instance:
 
+### **TypeScript**
+
 ```typescript
 import { Database, Connection } from 'mongrid';
 
 const connection = new Connection(`mongodb+srv://${user}:${password}@localhost:27017/`);
-    await connection.connect('mydatabase');
-    const db = new Database(connection.getDatabase()!);
+await connection.connect('mydatabase');
+const db = new Database(connection.getDatabase()!);
+```
+
+### **JavaScript**
+
+```javascript
+const { Database, Connection } = require('mongrid');
+
+const connection = new Connection(`mongodb+srv://${user}:${password}@localhost:27017/`);
+await connection.connect('mydatabase');
+const db = new Database(connection.getDatabase());
 ```
 
 - **Connection String**: Replace `mongodb+srv://${user}:${password}@localhost:27017/` with your MongoDB connection string.
@@ -54,8 +67,20 @@ const connection = new Connection(`mongodb+srv://${user}:${password}@localhost:2
 
 Define your models using the `ModelBuilder` class. Each model corresponds to a MongoDB collection.
 
+### **TypeScript**
+
 ```typescript
 import { ModelBuilder, FieldBuilder, NestedField } from 'mongrid';
+
+interface User {
+    name: string;
+    email: string;
+    age: number;
+    address: {
+        city: string;
+        country: string;
+    };
+}
 
 const userModel = new ModelBuilder<User>(db, 'users')
     .addField('name', new FieldBuilder<string>('name').required().type(String).build())
@@ -64,6 +89,22 @@ const userModel = new ModelBuilder<User>(db, 'users')
     .addNestedField('address', new NestedField<object>('address')
         .addField('city', new FieldBuilder<string>('city').required().type(String).build())
         .addField('country', new FieldBuilder<string>('country').required().type(String).build())
+    )
+    .build();
+```
+
+### **JavaScript**
+
+```javascript
+const { ModelBuilder, FieldBuilder, NestedField } = require('mongrid');
+
+const userModel = new ModelBuilder(db, 'users')
+    .addField('name', new FieldBuilder('name').required().type(String).build())
+    .addField('email', new FieldBuilder('email').required().type(String).unique().build())
+    .addField('age', new FieldBuilder('age').type(Number).build())
+    .addNestedField('address', new NestedField('address')
+        .addField('city', new FieldBuilder('city').required().type(String).build())
+        .addField('country', new FieldBuilder('country').required().type(String).build())
     )
     .build();
 ```
@@ -88,8 +129,22 @@ Field builders allow you to define fields with various options:
 
 ### **Example**
 
+#### **TypeScript**
+
 ```typescript
 const emailField = new FieldBuilder<string>('email')
+    .required()
+    .type(String)
+    .unique()
+    .default('example@example.com')
+    .transform((value) => value.toLowerCase())
+    .build();
+```
+
+#### **JavaScript**
+
+```javascript
+const emailField = new FieldBuilder('email')
     .required()
     .type(String)
     .unique()
@@ -107,6 +162,8 @@ Validators ensure that your data meets specific requirements before saving it to
 ### **Custom Validators**
 
 Create custom validators by extending the `Validator` class:
+
+#### **TypeScript**
 
 ```typescript
 import { Validator } from 'mongrid';
@@ -127,11 +184,43 @@ class EmailValidator<T extends { email: string }> extends Validator<T> {
 }
 ```
 
+#### **JavaScript**
+
+```javascript
+const { Validator } = require('mongrid');
+
+class EmailValidator extends Validator {
+    message = 'Invalid email format';
+
+    validate(document) {
+        const errors = [];
+        if (!document.email.includes('@')) {
+            errors.push('Email must contain "@"');
+        }
+        if (!document.email.endsWith('.com')) {
+            errors.push('Email must end with ".com"');
+        }
+        return errors;
+    }
+}
+```
+
 ### **Add Validators to a Model**
+
+#### **TypeScript**
 
 ```typescript
 const userModel = new ModelBuilder<User>(db, 'users')
     .addField('email', new FieldBuilder<string>('email').required().type(String).build())
+    .addValidator(new EmailValidator())
+    .build();
+```
+
+#### **JavaScript**
+
+```javascript
+const userModel = new ModelBuilder(db, 'users')
+    .addField('email', new FieldBuilder('email').required().type(String).build())
     .addValidator(new EmailValidator())
     .build();
 ```
@@ -155,6 +244,8 @@ Hooks allow you to execute custom logic at specific points in the document lifec
 
 ### **Example Hook**
 
+#### **TypeScript**
+
 ```typescript
 import { Hook, HookType } from 'mongrid';
 
@@ -169,13 +260,31 @@ const userModel = new ModelBuilder<User>(db, 'users')
     .build();
 ```
 
+#### **JavaScript**
+
+```javascript
+const { Hook, HookType } = require('mongrid');
+
+class LogBeforeSaveHook extends Hook {
+    async execute(data) {
+        console.log('BeforeSave Hook: Document is about to be saved:', data);
+    }
+}
+
+const userModel = new ModelBuilder(db, 'users')
+    .addHook(HookType.PreSave, new LogBeforeSaveHook())
+    .build();
+```
+
 ---
 
 ## Relationships
 
-Mongrid supports **One-to-One**, **One-to-Many**, and **Many-to-Many** relationships between models. You can define relationships using the `addOneToOne`, `addOneToMany`, and `addManyToMany` methods.
+Mongrid supports **One-to-One**, **One-to-Many**, and **Many-to-Many** relationships between models.
 
 ### **Example: One-to-One Relationship**
+
+#### **TypeScript**
 
 ```typescript
 const postModel = new ModelBuilder<Post>(db, 'posts')
@@ -186,26 +295,14 @@ const postModel = new ModelBuilder<Post>(db, 'posts')
     .build();
 ```
 
-### **Example: One-to-Many Relationship**
+#### **JavaScript**
 
-```typescript
-const commentModel = new ModelBuilder<Comment>(db, 'comments')
-    .addField('text', new FieldBuilder<string>('text').required().type(String).build())
-    .addField('postId', new FieldBuilder<ObjectId>('postId').required().type(ObjectId).build())
-    .addOneToMany('postId', postModel, 'comments', true) // Cascade delete
-    .build();
-```
-
-### **Example: Many-to-Many Relationship**
-
-```typescript
-const tagModel = new ModelBuilder<Tag>(db, 'tags')
-    .addField('name', new FieldBuilder<string>('name').required().type(String).build())
-    .build();
-
-const postModel = new ModelBuilder<Post>(db, 'posts')
-    .addField('tags', new FieldBuilder<ObjectId[]>('tags').type(Array).build())
-    .addManyToMany('tags', tagModel, 'posts', true) // Cascade delete
+```javascript
+const postModel = new ModelBuilder(db, 'posts')
+    .addField('title', new FieldBuilder('title').required().type(String).build())
+    .addField('content', new FieldBuilder('content').required().type(String).build())
+    .addField('author', new FieldBuilder('author').required().type(ObjectId).build())
+    .addOneToOne('author', userModel, 'author', true) // Cascade delete
     .build();
 ```
 
@@ -219,43 +316,55 @@ Mongrid provides methods to query data from your collections, including `find` a
 
 The `find` method allows you to query documents with optional population of related fields.
 
-#### **Example: Find All Posts**
+#### **TypeScript**
 
 ```typescript
 const posts = await postModel.find({});
 console.log(posts);
+
+const postsWithAuthor = await postModel.find({}, {}, ['author']);
+console.log(postsWithAuthor);
 ```
 
-#### **Example: Find Posts with Populated Author**
+#### **JavaScript**
 
-```typescript
-const posts = await postModel.find({}, {}, ['author']);
+```javascript
+const posts = await postModel.find({});
 console.log(posts);
+
+const postsWithAuthor = await postModel.find({}, {}, ['author']);
+console.log(postsWithAuthor);
 ```
 
 ### **findById**
 
 The `findById` method allows you to find a document by its ID and optionally populate related fields.
 
-#### **Example: Find a Post by ID**
+#### **TypeScript**
 
 ```typescript
 const post = await postModel.findById(postId);
 console.log(post);
+
+const postWithAuthor = await postModel.findById(postId, ['author']);
+console.log(postWithAuthor);
 ```
 
-#### **Example: Find a Post by ID with Populated Author**
+#### **JavaScript**
 
-```typescript
-const post = await postModel.findById(postId, ['author']);
+```javascript
+const post = await postModel.findById(postId);
 console.log(post);
+
+const postWithAuthor = await postModel.findById(postId, ['author']);
+console.log(postWithAuthor);
 ```
 
 ---
 
 ## Example Usage
 
-Here’s a complete example of using the MongoDB ORM:
+### **TypeScript Example**
 
 ```typescript
 import { Database, ModelBuilder, FieldBuilder, NestedField } from 'mongrid';
@@ -271,13 +380,6 @@ interface User {
     };
 }
 
-// Define the Post type
-interface Post {
-    title: string;
-    content: string;
-    author: ObjectId;
-}
-
 // Connect to the database
 const db = new Database('mongodb://localhost:27017', 'mydatabase');
 
@@ -290,14 +392,6 @@ const userModel = new ModelBuilder<User>(db, 'users')
         .addField('city', new FieldBuilder<string>('city').required().type(String).build())
         .addField('country', new FieldBuilder<string>('country').required().type(String).build())
     )
-    .build();
-
-// Define the Post model
-const postModel = new ModelBuilder<Post>(db, 'posts')
-    .addField('title', new FieldBuilder<string>('title').required().type(String).build())
-    .addField('content', new FieldBuilder<string>('content').required().type(String).build())
-    .addField('author', new FieldBuilder<ObjectId>('author').required().type(ObjectId).build())
-    .addOneToOne('author', userModel, 'author', true) // Cascade delete
     .build();
 
 // Save a user
@@ -316,32 +410,45 @@ async function createUser() {
     return userId;
 }
 
-// Save a post
-async function createPost(userId: ObjectId) {
-    const postId = await postModel.save({
-        title: 'My First Post',
-        content: 'This is a test post.',
-        author: userId,
+createUser().catch(console.error);
+```
+
+### **JavaScript Example**
+
+```javascript
+const { Database, ModelBuilder, FieldBuilder, NestedField } = require('mongrid');
+
+// Connect to the database
+const db = new Database('mongodb://localhost:27017', 'mydatabase');
+
+// Define the User model
+const userModel = new ModelBuilder(db, 'users')
+    .addField('name', new FieldBuilder('name').required().type(String).build())
+    .addField('email', new FieldBuilder('email').required().type(String).unique().build())
+    .addField('age', new FieldBuilder('age').type(Number).build())
+    .addNestedField('address', new NestedField('address')
+        .addField('city', new FieldBuilder('city').required().type(String).build())
+        .addField('country', new FieldBuilder('country').required().type(String).build())
+    )
+    .build();
+
+// Save a user
+async function createUser() {
+    const userId = await userModel.save({
+        name: 'John Doe',
+        email: 'john@example.com',
+        age: 30,
+        address: {
+            city: 'New York',
+            country: 'USA',
+        },
     });
 
-    console.log('Post saved with ID:', postId);
-    return postId;
+    console.log('User saved with ID:', userId);
+    return userId;
 }
 
-// Find a post with populated author
-async function findPost(postId: ObjectId) {
-    const post = await postModel.findById(postId, ['author']);
-    console.log('Post with populated author:', post);
-}
-
-// Main function
-async function main() {
-    const userId = await createUser();
-    const postId = await createPost(userId);
-    await findPost(postId);
-}
-
-main().catch(console.error);
+createUser().catch(console.error);
 ```
 
 ---
@@ -358,4 +465,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ---
 
-This updated `README.md` now includes detailed sections on **relationships**, **find**, and **findById** functionality, making it easier for users to understand and use these features in your ORM.
+This updated `README.md` now includes examples for both **TypeScript** and **JavaScript**, making it easier for users to understand and use the ORM in their preferred language.
