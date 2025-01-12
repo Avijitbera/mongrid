@@ -1,4 +1,4 @@
-import { Collection, Db, Document, IndexDescription, ObjectId, OptionalUnlessRequiredId } from 'mongodb'
+import { Collection, Db, Document, Filter, FindOptions, IndexDescription, ObjectId, OptionalUnlessRequiredId } from 'mongodb'
 import { InsertData } from '../types/types';
 import {HookType} from './hooks/HookType'
 import { Database } from './Database';
@@ -6,6 +6,7 @@ import { Field } from './fields/Field';
 import { Hook } from './hooks/Hook';
 import { Validator } from './validators/Validator';
 import { NestedField } from './fields/NestedField';
+import { RelationshipMetadata, RelationshipType } from './relationships/RelationshipType';
 
 
 export class Model<T extends Document> {
@@ -14,6 +15,7 @@ export class Model<T extends Document> {
     private validators: Validator<T>[] = [];
     private indexes: IndexDescription[] = [];
     private fields: {[key:string]: Field<any>} = {};
+    private relationships: {[key: string]: RelationshipMetadata<T, any>} = {};
 
 
 
@@ -194,6 +196,51 @@ export class Model<T extends Document> {
         }
     }
 
+    async find<K extends keyof T>(
+        filter: Filter<T> = {},
+        options: FindOptions = {},
+        populatedFields: K[] = []
+    ): Promise<T[]>{
+        const aggregationPipeline: any[] = [{ $match: filter }];
+
+        for (const fieldName of populatedFields){
+            const relationship = this.relationships[fieldName as string];
+            if(relationship){
+                const relatedModel = relationship.relatedModel;
+                const foreignKey = relationship.foreignKey;
+                aggregationPipeline.push({
+                    $lookup: {
+                        from: relatedModel.collection.collectionName,
+                        localField: foreignKey,
+                        foreignField: '_id',
+                        as: fieldName as string,
+                    },
+                });
+
+                if (relationship.type === RelationshipType.OneToOne || relationship.type === RelationshipType.OneToMany){
+                    aggregationPipeline.push({
+                        $unwind: {
+                            path: `$${fieldName as string}`,
+                            preserveNullAndEmptyArrays: true,
+                        },
+                    });
+                }
+            }
+        }
+        const documents = await this.collection.aggregate<T>(aggregationPipeline).toArray();
+        return documents;
+    }
+
+    async findById<K extends keyof T>(
+        id: ObjectId,
+        populatedFields: K[] = []
+    ): Promise<T | null> {
+        const document = await this.find({_id: id} as Filter<T>, {}, populatedFields);
+
+        return document[0] || null;
+    }
+    
+
     async save(data: OptionalUnlessRequiredId<T>): Promise<ObjectId> {
         await this.validateDocument(data);
 
@@ -201,6 +248,14 @@ export class Model<T extends Document> {
             const fieldOptions = field.getOptions();
             if (fieldOptions.required && data[fieldName] === undefined) {
                 throw new Error(`Missing required field: ${fieldName}`);
+            }
+        }
+
+        for (const [fieldName, relationship] of Object.entries(this.relationships)){
+            const foreignKeyValue = data[fieldName];
+            if(foreignKeyValue){
+                const relatedModel = relationship.relatedModel;
+                // const relatedDocument = await relatedModel.findOne(foreignKeyValue);
             }
         }
 

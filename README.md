@@ -35,10 +35,12 @@ To connect to your MongoDB database, create a `Database` instance:
 ```typescript
 import { Database } from 'mongrid';
 
-const db = new Database('mongodb://localhost:27017', 'mydatabase');
+const connection = new Connection(`mongodb+srv://${user}:${password}@localhost:27017/`);
+    await connection.connect('mydatabase');
+    const db = new Database(connection.getDatabase()!);
 ```
 
-- **Connection String**: Replace `mongodb://localhost:27017` with your MongoDB connection string.
+- **Connection String**: Replace `mongodb+srv://${user}:${password}@localhost:27017/` with your MongoDB connection string.
 - **Database Name**: Replace `mydatabase` with your database name.
 
 ---
