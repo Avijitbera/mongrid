@@ -30,3 +30,11 @@ export class AccountModel extends Model<Account> {
         super(db, 'accounts');
     }
 }
+
+export interface Post {
+    _id?: ObjectId;
+    title: string;
+    content: string;
+    author: ObjectId; // Foreign key to User
+    comments?: ObjectId[]; // Foreign keys to Comment (One-to-Many)
+}

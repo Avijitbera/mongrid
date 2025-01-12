@@ -1,5 +1,5 @@
 import { MongoClient } from "mongodb";
-import { Account, UserModel } from "./UserModel";
+import { Account, Post, UserModel } from "./UserModel";
 import dotenv from "dotenv";
 import {Connection} from '../src/core/Connection'
 import { Database } from "../src/core/Database";
@@ -64,6 +64,11 @@ const main = async() =>{
     .addField("country", new FieldBuilder<string>("country").required().type(String).build())
     
 
+    const postModel = new ModelBuilder<Post>(db, 'posts')
+    .addField('title', new FieldBuilder<string>("title").required().type(String).build())
+    .addField('content', new FieldBuilder<string>("content").required().type(String).build())
+    .build();
+
     const accountModel = new ModelBuilder<Account>(db, 'accounts')
     .addField("name", new FieldBuilder<string>("name").required().type(String).build())
     .addField("email", new FieldBuilder<string>("email").type(String).unique().required()
@@ -78,19 +83,21 @@ const main = async() =>{
     .addValidator(new EmailAndAgeValidator())
     .build();
 
-    const id = await accountModel.save({
-        age:34,
-        email:"mail@431mail.com",
-        imageUrl:"imageUrl",
-        name:"test",
-        address:{
-            city:"city12",
-            state:"state1200",
-            country:"country1200"
-        }
+    
 
-    })
-    console.log(id)
+    // const id = await accountModel.save({
+    //     age:34,
+    //     email:"mail@431mail.com",
+    //     imageUrl:"imageUrl",
+    //     name:"test",
+    //     address:{
+    //         city:"city12",
+    //         state:"state1200",
+    //         country:"country1200"
+    //     }
+
+    // })
+    // console.log(id)
     exit(0)
    
 }

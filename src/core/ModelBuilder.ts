@@ -5,6 +5,7 @@ import { HookType } from "./hooks/HookType";
 import { Database } from "./Database";
 import { Validator } from "./validators/Validator";
 import { Model } from "./model";
+import { RelationshipMetadata, RelationshipType } from "./relationships/RelationshipType";
 
 
 export class ModelBuilder<T extends Document>{
@@ -12,6 +13,7 @@ export class ModelBuilder<T extends Document>{
     private hooks: {[key in HookType]?: Hook<T>[]} = {};
     private validators: Validator<T>[] = [];
     private indexes: IndexDescription[] = [];
+    private relationships: {[key: string]: RelationshipMetadata<T, any>} = {};
     // private fields: {[key:string]: Field<any>} = {};
     private extensions: any[] = [];
 
@@ -20,6 +22,29 @@ export class ModelBuilder<T extends Document>{
     constructor(private db: Database,
         private collectionName: string
     ){}
+
+    /**
+     * Add a OneToOne relationship to the model.
+     * @param fieldName The name of the field.
+     * @param relatedModel The related model.
+     * @param foreignKey The foreign key field.
+     * @param cascade Whether to cascade delete.
+     */
+    addOneToOne<R extends Document>(
+        fieldName: keyof T & string,
+        relatedModel: Model<R>,
+        foreignKey: string,
+        cascade: boolean = false
+    ): this{
+        this.relationships[fieldName]
+        = new RelationshipMetadata(
+            RelationshipType.OneToOne,
+            relatedModel,
+            foreignKey,
+            cascade
+        );
+        return this;
+    }
 
     addField(name:string, field: Field<any>):this{
         this.fields[name] = field
