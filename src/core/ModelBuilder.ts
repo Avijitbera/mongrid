@@ -46,6 +46,28 @@ export class ModelBuilder<T extends Document>{
         return this;
     }
 
+    /**
+     * Add a ManyToMany relationship to the model.
+     * @param fieldName The name of the field.
+     * @param relatedModel The related model.
+     * @param foreignKey The foreign key field.
+     * @param cascade Whether to cascade delete.
+     */
+    addManyToMany<R extends Document>(
+        fieldName: keyof T & string,
+        relatedModel: Model<R>,
+        foreignKey: string,
+        cascade: boolean = false
+    ): this {
+        this.relationships[fieldName] = new RelationshipMetadata(
+            RelationshipType.ManyToMany,
+            relatedModel,
+            foreignKey,
+            cascade
+        );
+        return this;
+    }
+
     addField(name:string, field: Field<any>):this{
         this.fields[name] = field
         const fieldOptions = field.getOptions()
