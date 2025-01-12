@@ -23,6 +23,10 @@ export class Connection {
         return this.db;
     }
 
+    getClient(): MongoClient {
+        return this.client;
+    }
+
     async disconnect():Promise<void>{
         try {
             await this.client.close();
