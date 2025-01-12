@@ -47,6 +47,29 @@ export class ModelBuilder<T extends Document>{
     }
 
     /**
+     * Add a OneToMany relationship to the model.
+     * @param fieldName The name of the field.
+     * @param relatedModel The related model.
+     * @param foreignKey The foreign key field.
+     * @param cascade Whether to cascade delete.
+     */
+    addOneToMany<R extends Document>(
+        fieldName: keyof T & string,
+        relatedModel: Model<R>,
+        foreignKey: string,
+        cascade: boolean = false
+    ):this{
+        this.relationships[fieldName] = new RelationshipMetadata(
+            RelationshipType.OneToMany,
+            relatedModel,
+            foreignKey,
+            cascade
+        )
+        return this
+    }
+
+
+    /**
      * Add a ManyToMany relationship to the model.
      * @param fieldName The name of the field.
      * @param relatedModel The related model.
