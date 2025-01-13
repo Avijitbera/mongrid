@@ -1,4 +1,5 @@
-import { Filter } from "mongodb";
+import { Filter, Document, FindOptions } from "mongodb";
+import { Model } from "./model";
 
 
 type ComparisonOperators<T> = {
@@ -19,3 +20,10 @@ type LogicalOperators<T> = {
     nor?: Filter<T>[]
 }
 
+export class QueryBuilder<T extends Document>{
+    private filter: Filter<T> = {};
+    private options: FindOptions = {};
+    private populatedFields: (keyof T)[] = [];
+
+    constructor(private model: Model<T>){}
+}
