@@ -1,8 +1,8 @@
-import { Collection, Db, Document } from "mongodb";
+import { Collection, Db, Document, ClientSession, MongoClient } from "mongodb";
 import { Model } from "./model";
 
 export class Database {
-    constructor(private db: Db){}
+    constructor(private db: Db) { }
 
     getCollection<T extends Document>(collectionName: string): Collection<T> {
         return this.db.collection<T>(collectionName);
@@ -14,5 +14,20 @@ export class Database {
 
     getDatabase(): Db {
         return this.db;
+    }
+
+
+    async withTransaction(client: MongoClient, fn: (session: ClientSession) => Promise<void>): Promise<void> {
+        const session = client.startSession();
+        session.startTransaction();
+        return fn(session)
+            .then(() => session.commitTransaction())
+            .catch((error) => {
+                session.abortTransaction();
+                throw error;
+            })
+            .finally(() => {
+                session.endSession();
+            });
     }
 }
