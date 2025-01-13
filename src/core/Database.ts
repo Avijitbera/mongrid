@@ -17,11 +17,14 @@ export class Database {
     }
 
 
-    async withTransaction(client: MongoClient, fn: (session: ClientSession) => Promise<void>): Promise<void> {
+    async withTransaction<T>(client: MongoClient, fn: (session: ClientSession) => Promise<T>): Promise<T> {
         const session = client.startSession();
         session.startTransaction();
         return fn(session)
-            .then(() => session.commitTransaction())
+            .then((value:T)=>{
+                session.commitTransaction()
+                return value;
+            })
             .catch((error) => {
                 session.abortTransaction();
                 throw error;

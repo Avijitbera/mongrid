@@ -55,15 +55,17 @@ const main = async() =>{
     const user = process.env.MONGO_DB_USER
     const password = process.env.MONGO_DB_PASS
     const connection = new Connection(`mongodb+srv://${user}:${password}@cluster0.x8mcxdp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`);
-    const dbName = `test${Math.trunc(Math.random()*1000)}`;
+    const dbName = `bsonify`;
     await connection.connect(dbName);
     const db = new Database(connection.getDatabase()!);
-    db.withTransaction(connection.getClient(), async (session: ClientSession) => {
-        const accounts = db.getCollection("accounts");
+    var result = await db.withTransaction<string>(connection.getClient(), async (session: ClientSession) => {
+        const accounts = db.getCollection("user");
         await accounts.insertOne({ name: "Alice", balance: 1000 }, { session });
         console.log("Transaction successful");
+        return "Success"
     }
     )
+    console.log({result})
     // await db.getDatabase().createCollection("posts");
 
     const addressField = new NestedField<object>("address")
@@ -99,7 +101,7 @@ const main = async() =>{
 
     const id = await accountModel.save({
         age:34,
-        email:"mail514@mail.com",
+        email:"mail5114@mail.com",
         imageUrl:"imageUrl",
         name:"test",
         address:{
