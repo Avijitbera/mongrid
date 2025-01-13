@@ -1,4 +1,4 @@
-import { MongoClient } from "mongodb";
+import { ClientSession, MongoClient } from "mongodb";
 import { Account, Post, UserModel } from "./UserModel";
 import dotenv from "dotenv";
 import {Connection} from '../src/core/Connection'
@@ -55,8 +55,15 @@ const main = async() =>{
     const user = process.env.MONGO_DB_USER
     const password = process.env.MONGO_DB_PASS
     const connection = new Connection(`mongodb+srv://${user}:${password}@cluster0.x8mcxdp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`);
-    await connection.connect('bsonify');
+    const dbName = `test${Math.trunc(Math.random()*1000)}`;
+    await connection.connect(dbName);
     const db = new Database(connection.getDatabase()!);
+    db.withTransaction(connection.getClient(), async (session: ClientSession) => {
+        const accounts = db.getCollection("accounts");
+        await accounts.insertOne({ name: "Alice", balance: 1000 }, { session });
+        console.log("Transaction successful");
+    }
+    )
     // await db.getDatabase().createCollection("posts");
 
     const addressField = new NestedField<object>("address")
