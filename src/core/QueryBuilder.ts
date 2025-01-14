@@ -102,4 +102,19 @@ export class QueryBuilder<T extends Document>{
         this.options.skip = skip;
         return this
     }
+
+    populate<K extends keyof T>(...fields: K[]):this{
+        this.populatedFields.push(...fields);
+        return this
+    }
+
+    async execute(): Promise<T[]> {
+        return this.model.find(this.filter, this.options, this.populatedFields);
+
+    }
+
+    async executeOne(): Promise<T | null> {
+        const results = await this.execute();
+        return results[0] || null;
+    }
 }
