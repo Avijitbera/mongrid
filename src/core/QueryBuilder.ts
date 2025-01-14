@@ -87,4 +87,19 @@ export class QueryBuilder<T extends Document>{
         this.filter[field as keyof Filter<T>] = { $not: condition } as Filter<T[K]>;
         return this;
     }
+
+    nor(conditions: Filter<T>[]): this {
+        this.filter.$nor = conditions as Filter<WithId<T>>[];
+        return this;
+    }
+
+    limit(limit:number): this {
+        this.options.limit = limit;
+        return this;
+    }
+
+    skip(skip:number):this {
+        this.options.skip = skip;
+        return this
+    }
 }
