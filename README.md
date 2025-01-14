@@ -16,11 +16,12 @@ A lightweight, type-safe MongoDB ORM for Node.js and TypeScript. Easily define m
 8. [Querying Data](#querying-data)
    - [find](#find)
    - [findById](#findbyid)
-9. [Example Usage](#example-usage)
-   - [TypeScript](#typescript-example)
-   - [JavaScript](#javascript-example)
-10. [Contributing](#contributing)
-11. [License](#license)
+9. [Query Builder](#query-builder)
+10. [Example Usage](#example-usage)
+    - [TypeScript](#typescript-example)
+    - [JavaScript](#javascript-example)
+11. [Contributing](#contributing)
+12. [License](#license)
 
 ---
 
@@ -362,6 +363,65 @@ console.log(postWithAuthor);
 
 ---
 
+## Query Builder
+
+Mongrid provides a type-safe query builder for constructing complex queries.
+
+### **Query Builder Methods**
+
+| Method               | Description                                                                 |
+|----------------------|-----------------------------------------------------------------------------|
+| `where(field, operator, value)` | Adds a condition to the filter using a comparison operator.                 |
+| `whereId(id)`        | Adds a condition to filter by `_id`.                                        |
+| `and(conditions)`    | Adds a logical AND condition to the filter.                                 |
+| `or(conditions)`     | Adds a logical OR condition to the filter.                                  |
+| `not(field, condition)` | Adds a logical NOT condition for a specific field.                         |
+| `nor(conditions)`    | Adds a logical NOR condition to the filter.                                 |
+| `limit(limit)`       | Sets the limit for the query.                                               |
+| `skip(skip)`         | Sets the number of documents to skip.                                       |
+| `sort(field, direction)` | Sets the sort order for the query.                                        |
+| `populate(...fields)`| Adds fields to be populated (joined with related documents).                |
+| `execute()`          | Executes the query and returns the results.                                 |
+| `executeOne()`       | Executes the query and returns the first result or null.                    |
+
+### **Example Usage**
+
+#### **TypeScript**
+
+```typescript
+const queryBuilder = new QueryBuilder<User>(userModel)
+    .where('age', 'greaterThan', 18) // Simplified comparison operator
+    .where('name', 'equal', 'John Doe') // Simplified comparison operator
+    .and([
+        { status: 'in', ['active'] }, // Simplified comparison operator
+    ])
+    .limit(10)
+    .sort('age', 'asc')
+    .populate('email');
+
+const users = await queryBuilder.execute();
+console.log(users);
+```
+
+#### **JavaScript**
+
+```javascript
+const queryBuilder = new QueryBuilder(userModel)
+    .where('age', 'greaterThan', 18) // Simplified comparison operator
+    .where('name', 'equal', 'John Doe') // Simplified comparison operator
+    .and([
+        { status: 'in', ['active'] }, // Simplified comparison operator
+    ])
+    .limit(10)
+    .sort('age', 'asc')
+    .populate('email');
+
+const users = await queryBuilder.execute();
+console.log(users);
+```
+
+---
+
 ## Example Usage
 
 ### **TypeScript Example**
@@ -465,4 +525,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ---
 
-This updated `README.md` now includes examples for both **TypeScript** and **JavaScript**, making it easier for users to understand and use the ORM in their preferred language.
+This updated `README.md` now focuses on the core features of Mongrid, including **query builder**, and provides clear examples for both TypeScript and JavaScript users.
