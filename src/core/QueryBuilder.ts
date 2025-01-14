@@ -1,4 +1,4 @@
-import { Filter, Document, FindOptions } from "mongodb";
+import { Filter, Document, FindOptions, ObjectId, WithId } from "mongodb";
 import { Model } from "./model";
 import { equal, notEqual } from "assert";
 
@@ -64,6 +64,27 @@ export class QueryBuilder<T extends Document>{
             (this.filter[field as keyof Filter<T>] as QueryOperators<T[K]>)[mongoOperator] = refinedValue;
         }
 
+        return this;
+    }
+
+    whereId(_id: ObjectId): this {
+         this.filter._id = _id as unknown as Filter<T>['_id'];
+         return this
+    }
+
+    and(condition: Filter<T>[]):this{
+        this.filter.$and = condition as Filter<WithId<T>>[];
+        return this
+    }
+
+    or(condition: Filter<T>[]):this{
+        this.filter.$or = condition as Filter<WithId<T>>[];
+        return this;
+    }
+
+    not<K extends keyof T>(field: K, condition: Filter<T[K]>): this {
+        // Apply the $not operator to the specified field
+        this.filter[field as keyof Filter<T>] = { $not: condition } as Filter<T[K]>;
         return this;
     }
 }
