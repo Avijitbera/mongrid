@@ -7,6 +7,7 @@ import { Hook } from './hooks/Hook';
 import { Validator } from './validators/Validator';
 import { NestedField } from './fields/NestedField';
 import { RelationshipMetadata, RelationshipType } from './relationships/RelationshipType';
+import { Plugin } from './plugin/plugin';
 
 
 export class Model<T extends Document> {
@@ -16,8 +17,13 @@ export class Model<T extends Document> {
     private indexes: IndexDescription[] = [];
     private fields: {[key:string]: Field<any>} = {};
     private relationships: {[key: string]: RelationshipMetadata<T, any>} = {};
+    private plugins: Plugin<T>[] = []; // Array of plugin instances>
 
-
+    use(plugin: Plugin<T>) {
+        this.plugins.push(plugin);
+        plugin.install(this);
+        return this;
+    }
 
     /**
      * Construct a model class.
