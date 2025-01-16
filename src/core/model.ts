@@ -256,8 +256,11 @@ export class Model<T extends Document> {
         populatedFields: K[] = []
     ): Promise<T | null> {
         const document = await this.find({_id: id} as Filter<T>, {}, populatedFields);
-
         return document[0] || null;
+    }
+
+    async updateById(id: ObjectId, data: Partial<T>, options?: {session?: ClientSession}): Promise<void>{
+        await this.collection.updateOne({_id: id} as Filter<T>, {$set: data}, {session: options?.session});
     }
 
     addRelationship<R extends Document>(
