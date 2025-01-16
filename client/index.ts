@@ -118,7 +118,7 @@ const main = async() =>{
             content: "This is test12",
             title: "Test 1234",
             author: id
-        });
+        }, );
         console.log({ postId });
     } catch (error:any) {
         

@@ -1,4 +1,4 @@
-import { Collection, Db, Document, Filter, FindOptions, IndexDescription, ObjectId, OptionalUnlessRequiredId } from 'mongodb'
+import { ClientSession, Collection, Db, Document, Filter, FindOptions, IndexDescription, ObjectId, OptionalUnlessRequiredId } from 'mongodb'
 import { InsertData } from '../types/types';
 import {HookType} from './hooks/HookType'
 import { Database } from './Database';
@@ -271,7 +271,7 @@ export class Model<T extends Document> {
    
     
 
-    async save(data: OptionalUnlessRequiredId<T>): Promise<ObjectId> {
+    async save(data: OptionalUnlessRequiredId<T>, options?: {session?: ClientSession}): Promise<ObjectId> {
     await this.ensureCollection();
         await this.validateDocument(data);
 
@@ -356,7 +356,7 @@ export class Model<T extends Document> {
         await this.ensureSchemaValidation();
         await this.ensureIndexes();
         await this.executeHooks(HookType.PreSave, aliasedData);
-        const result = await this.collection.insertOne(aliasedData);
+        const result = await this.collection.insertOne(aliasedData, {session: options?.session});
         await this.executeHooks(HookType.PostSave, aliasedData);
         return result.insertedId!;
     }
