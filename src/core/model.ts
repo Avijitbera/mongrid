@@ -356,9 +356,14 @@ export class Model<T extends Document> {
         await this.ensureSchemaValidation();
         await this.ensureIndexes();
         await this.executeHooks(HookType.PreSave, aliasedData);
-        const result = await this.collection.insertOne(aliasedData, {session: options?.session});
+        const result = await this.collection.updateOne(
+            { _id: aliasedData._id },
+            { $set: aliasedData },
+            { upsert: true, session: options?.session }
+        );
+        
         await this.executeHooks(HookType.PostSave, aliasedData);
-        return result.insertedId!;
+        return aliasedData?._id || result.upsertedId!;
     }
 
     private getBsonType(type: any): string{
