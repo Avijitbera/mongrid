@@ -341,7 +341,6 @@ console.log(postsWithAuthor);
 
 The `findById` method allows you to find a document by its ID and optionally populate related fields.
 
-#### **TypeScript**
 
 ```typescript
 const post = await postModel.findById(postId);
@@ -359,6 +358,23 @@ console.log(post);
 
 const postWithAuthor = await postModel.findById(postId, ['author']);
 console.log(postWithAuthor);
+```
+
+### **updateById**
+
+The `updateById` method allows you to update a document by its ID.
+
+
+```typescript
+const post = await postModel.updateById(postId, {title: 'Updated Title'});
+console.log(post);
+```
+
+#### **JavaScript**
+
+```javascript
+const post = await postModel.updateById(postId, {title: 'Updated Title'});
+console.log(post);
 ```
 
 ---
