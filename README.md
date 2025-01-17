@@ -487,6 +487,25 @@ async function createUser() {
 }
 
 createUser().catch(console.error);
+
+// update or create a user if it doesn't exist by the same ID
+async function updateOrCreateUser(){
+    const userId = await userModel.save({
+        name: 'John Doe',
+        email: 'john@example.com',
+        age: 30,
+        address: {
+            city: 'New York',
+            country: 'USA',
+        },
+        _id: 'existingUserId' // ObjectId
+    });
+
+    return userId;
+}
+
+updateOrCreateUser().catch(console.error);
+
 ```
 
 ### **JavaScript Example**
@@ -525,6 +544,25 @@ async function createUser() {
 }
 
 createUser().catch(console.error);
+
+// update or create a user if it doesn't exist by the same ID
+async function updateOrCreateUser(){
+    const userId = await userModel.save({
+        name: 'John Doe',
+        email: 'john@example.com',
+        age: 30,
+        address: {
+            city: 'New York',
+            country: 'USA',
+        },
+        _id: 'existingUserId' // ObjectId
+    });
+
+    return userId;
+}
+
+updateOrCreateUser().catch(console.error);
+
 ```
 
 ---
