@@ -1,6 +1,7 @@
 import { Filter, Document, FindOptions, ObjectId, WithId } from "mongodb";
 import { Model } from "./model";
 import { equal, notEqual } from "assert";
+import { ERROR_CODES, MongridError } from "../error/MongridError";
 
 
 type ComparisonOperators<T> = {
@@ -109,12 +110,30 @@ export class QueryBuilder<T extends Document>{
     }
 
     async execute(): Promise<T[]> {
-        return this.model.find(this.filter, this.options, this.populatedFields);
+        try {
+            
+            return this.model.find(this.filter, this.options, this.populatedFields);
+        } catch (error:any) {
+            throw new MongridError(
+                `Query execution failed: ${error.message}`,
+                ERROR_CODES.QUERY_EXECUTION_ERROR,
+                {filter:this.filter, options: this.options, populatedFields: this.populatedFields}
+            )
+        }
 
     }
 
     async executeOne(): Promise<T | null> {
-        const results = await this.execute();
-        return results[0] || null;
+        try {
+            
+            const results = await this.execute();
+            return results[0] || null;
+        } catch (error:any) {
+            throw new MongridError(
+                `Query execution failed: ${error.message}`,
+                ERROR_CODES.QUERY_EXECUTION_ERROR,
+                {filter: this.filter, options:this.options}
+            )
+        }
     }
 }

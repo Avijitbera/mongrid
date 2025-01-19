@@ -8,7 +8,7 @@ import { Validator } from './validators/Validator';
 import { NestedField } from './fields/NestedField';
 import { RelationshipMetadata, RelationshipType } from './relationships/RelationshipType';
 import { Plugin } from './plugin/plugin';
-
+import {ERROR_CODES, MongridError} from '../error/MongridError'
 
 export class Model<T extends Document> {
     private collection: Collection<T>;
@@ -58,7 +58,17 @@ export class Model<T extends Document> {
     private async executeHooks(type: HookType, document: T): Promise<void>{
         if (this.hooks[type]) {
             for (const hook of this.hooks[type]!) {
-                await hook.execute(document);
+                try {
+                    await hook.execute(document);
+                } catch (error:any) {
+                    throw new MongridError(
+                        `Hook execution failed: ${error.message}`,
+                        ERROR_CODES.HOOK_EXECUTION_ERROR,
+                        {
+                            hookType: type, document
+                        }
+                    )
+                }
             }
         }
     }
@@ -93,7 +103,11 @@ export class Model<T extends Document> {
             const errorMessages = Object.entries(errors)
                 .map(([field, fieldErrors]) => `${field}: ${fieldErrors!.join(', ')}`)
                 .join('; ');
-            throw new Error(errorMessages);
+            throw new MongridError(
+                "Document validation failed",
+                ERROR_CODES.VALIDATION_ERROR,
+                {errors}
+            );
         }
 
     }

@@ -1,4 +1,5 @@
 import { Db, MongoClient } from "mongodb";
+import { ERROR_CODES, MongridError } from "../error/MongridError";
 
 
 export class Connection {
@@ -14,7 +15,11 @@ export class Connection {
             await this.client.connect();
             this.db = this.client.db(dbName);
         } catch (error) {
-            throw error;
+            throw new MongridError(
+                `Failed to connect to database`,
+                ERROR_CODES.DATABASE_CONNECTION_FAILED,
+                {dbName, uri:this.uri}
+            );
         }
     }
 
@@ -33,7 +38,10 @@ export class Connection {
             console.log("Database disconnected");
         } catch (error) {
             console.log('Error disconnecting from database');
-            throw error;
+            throw new MongridError(
+                `Failed to disconnect`,
+                ERROR_CODES.DATABASE_CONNECTION_FAILED
+            );
         }
     }
 }

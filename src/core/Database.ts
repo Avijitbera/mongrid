@@ -1,5 +1,6 @@
 import { Collection, Db, Document, ClientSession, MongoClient } from "mongodb";
 import { Model } from "./model";
+import { ERROR_CODES, MongridError } from "../error/MongridError";
 
 export class Database {
     constructor(private db: Db) { }
@@ -27,7 +28,11 @@ export class Database {
             })
             .catch((error) => {
                 session.abortTransaction();
-                throw error;
+                throw new MongridError(
+                    `Transaction failed: ${error.message}`,
+                    ERROR_CODES.TRANSACTION_ERROR,
+                    {error}
+                )
             })
             .finally(() => {
                 session.endSession();

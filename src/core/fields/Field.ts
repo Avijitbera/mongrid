@@ -14,11 +14,17 @@ export class Field<T> {
         default?:T,
         hooks?: {[key in HookType]?: Hook<T>[]},
         alias?:string,
-        transform?: (value:T) => T
+        transform?: (value:T) => T,
+        immutable?: boolean | ((value:T) => boolean)
 
     } = {};
 
     constructor(private name: string){}
+
+    immutable(condition?: (document:T) => boolean): this {
+        this.options.immutable = condition ? condition : true;
+        return this;
+    }
 
     required():this {
         this.options.required = true;
