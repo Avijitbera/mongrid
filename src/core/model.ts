@@ -236,6 +236,10 @@ export class Model<T extends Document> {
                 };
                 }
             }
+
+            if(fieldOptions.immutable){
+                validator.$jsonSchema.properties[name].readOnly = true;
+            }
            
         }
         
