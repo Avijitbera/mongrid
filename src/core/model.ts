@@ -116,6 +116,24 @@ export class Model<T extends Document> {
         this.fields[name] = field
         const fieldOptions = field.getOptions();
         const fieldHooks = field.getOptions().hooks;
+        
+        if(fieldOptions.immutable){
+            this.addHook(
+                HookType.PreUpdate,
+               {
+                execute: async(document: T) =>{
+                    if(document[name] !== undefined){
+                        throw new MongridError(
+                            `Field ${name} is immutable`,
+                            ERROR_CODES.FIELD_IS_IMMUTABLE,
+                            {fieldName: name}
+                        )
+                    }
+                }
+               }
+            )
+        }
+        
         if(fieldHooks){
             for(const [hookType, hooks] of Object.entries(fieldHooks)){
                 for(const hook of hooks){
