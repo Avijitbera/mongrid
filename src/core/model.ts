@@ -1,4 +1,4 @@
-import { ClientSession, Collection, Db, Document, Filter, FindOptions, IndexDescription, ObjectId, OptionalUnlessRequiredId, UpdateResult } from 'mongodb'
+import { ClientSession, Collection, Db, Document, Filter, FindOptions, IndexDescription, ObjectId, OptionalUnlessRequiredId, UpdateFilter, UpdateResult } from 'mongodb'
 import { InsertData } from '../types/types';
 import {HookType} from './hooks/HookType'
 import { Database } from './Database';
@@ -301,6 +301,31 @@ export class Model<T extends Document> {
     ): this{
         this.relationships[fieldName] = relationshipMetadata;
         return this
+    }
+
+    async update(filter: Filter<T>,
+        update: UpdateFilter<T>
+    ): Promise<number>{
+        const documents = await this.find(filter);
+
+        for(const document of documents){
+            for(const [fieldName, field] of Object.entries(this.fields)){
+                const fieldOptions = field.getOptions();
+                if (
+                    (typeof fieldOptions.immutable === "function" ? fieldOptions.immutable(document) : fieldOptions.immutable) &&
+                    update.$set &&
+                    update.$set[fieldName as keyof T] !== undefined
+                ) {
+                    throw new MongridError(
+                        `Field '${fieldName}' is immutable and cannot be modified.`,
+                        ERROR_CODES.IMMUTABLE_FIELD_ERROR,
+                        { fieldName, documentId: (document as any)._id }
+                    );
+                }
+            }
+        }
+        const result = await this.collection.updateMany(filter, update);
+        return result.modifiedCount
     }
 
    
