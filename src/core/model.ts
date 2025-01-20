@@ -1,4 +1,4 @@
-import { ClientSession, Collection, Db, Document, Filter, FindOptions, IndexDescription, ObjectId, OptionalUnlessRequiredId, UpdateFilter, UpdateResult } from 'mongodb'
+import { ClientSession, Collection, Db, DeleteResult, Document, Filter, FindOptions, IndexDescription, ObjectId, OptionalUnlessRequiredId, UpdateFilter, UpdateResult } from 'mongodb'
 import { InsertData } from '../types/types';
 import {HookType} from './hooks/HookType'
 import { Database } from './Database';
@@ -297,6 +297,12 @@ export class Model<T extends Document> {
 
     async updateById(id: ObjectId, data: Partial<T>, options?: {session?: ClientSession}): Promise<UpdateResult<T>>{
         return await this.collection.updateOne({_id: id} as Filter<T>, {$set: data}, {session: options?.session});
+    }
+
+    async deleteById(id: ObjectId, options?: {session? : ClientSession}) : Promise<DeleteResult>{
+        return await this.collection.deleteOne({
+            _id: id
+        } as Filter<T>, {session: options?.session})
     }
 
     addRelationship<R extends Document>(
