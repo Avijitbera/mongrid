@@ -4,7 +4,7 @@ import { Db, MongoClient } from "mongodb";
 let db: Db;
 
 const uri = process.env.MONGO_URI;
-const dbName = `bsonify`;
+const dbName = `bsonify_temp`;
 
 export async function connect() {
     if(db) return db;
@@ -13,4 +13,10 @@ export async function connect() {
     await client.connect();
     db = client.db(dbName);
     return db;
+}
+
+export async function cleanup(): Promise<void> {
+    if (db) {
+        await db.dropDatabase();
+    }
 }
