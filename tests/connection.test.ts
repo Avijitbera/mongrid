@@ -1,10 +1,13 @@
 import { Connection } from "../src/core/Connection"
 import { Database } from "../src/core/Database";
+import dotenv from 'dotenv'
+dotenv.config()
+
 
 describe("Testing the connection String", () => {
     let connection: Connection;
     let db: Database;
-    let url = process.env.MONGO_URL || "mongodb://localhost:27017";
+    let url = process.env.MONGO_URI || "mongodb://localhost:27017";
     let dbname = "test";
 
     beforeAll(async () => {

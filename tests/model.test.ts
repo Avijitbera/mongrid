@@ -1,5 +1,7 @@
 import {cleanup, connect} from './db'
 import {Database, FieldBuilder, Model} from '../src'
+import dotenv from 'dotenv'
+dotenv.config()
 interface User {
     id: string;
     name: string;
@@ -24,4 +26,21 @@ describe('Model - Save and Get', () =>{
     afterAll(async () => {
         await cleanup();
     });
+
+    it('Should save and get a user by ID', async () => {
+        const userId = await userModel.save({
+            id: "123",
+            name: "John Doe",
+            age: 30,
+        
+        })
+
+        const user = await userModel.findById(userId);
+
+        expect(user).toBeDefined()
+        expect(user?.id).toBe("123")
+        expect(user?.name).toBe("John Doe")
+        expect(user?.age).toBe(30)
+
+    })
 })
