@@ -1,9 +1,11 @@
 import { Database, FieldBuilder, Model } from "../../src";
+import { User } from "./user.model";
 
 export interface Post {
     id:string;
     title:string;
     userId:string;
+    user:User;
 }
 
 export function createPostModel(db: Database): Model<Post> {
