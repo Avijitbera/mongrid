@@ -1,6 +1,7 @@
 import {cleanup, connect} from './db'
 import {Database, FieldBuilder, Model} from '../src'
 import dotenv from 'dotenv'
+import { ObjectId } from '../src/types';
 dotenv.config()
 interface User {
     id: string;
@@ -52,5 +53,12 @@ describe('Model - Save and Get', () =>{
                 age: 40,
             } as any) // Cast to "any" to bypass TypeScript checks for testing
         ).rejects.toThrow("Missing required field: name");
+    });
+    it("should return null when trying to retrieve a non-existent document", async () => {
+        // Attempt to retrieve a document with a non-existent ID
+        const user = await userModel.findById(new ObjectId());
+
+        // Assertions
+        expect(user).toBeNull();
     });
 })
