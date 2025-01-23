@@ -43,4 +43,14 @@ describe('Model - Save and Get', () =>{
         expect(user?.age).toBe(30)
 
     })
+
+    it("should throw an error when saving a document with missing required fields", async () => {
+        // Attempt to save a document without the required "name" field
+        await expect(
+            userModel.save({
+                id: "789",
+                age: 40,
+            } as any) // Cast to "any" to bypass TypeScript checks for testing
+        ).rejects.toThrow("Missing required field: name");
+    });
 })
