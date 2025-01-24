@@ -18,6 +18,6 @@ export async function connect() {
 
 export async function cleanup(): Promise<void> {
     if (db) {
-        await db.dropDatabase();
+        // await db.dropDatabase();
     }
 }

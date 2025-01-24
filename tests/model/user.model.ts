@@ -4,7 +4,7 @@ import { Post } from "./post.model";
 export interface User {
     id:string;
     name: string;
-    posts: Post[]
+    posts?: Post[]
 }
 
 export function createUserModel(db: Database): Model<User> {

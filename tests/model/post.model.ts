@@ -5,7 +5,7 @@ export interface Post {
     id:string;
     title:string;
     userId:string;
-    user:User;
+    user?:User;
 }
 
 export function createPostModel(db: Database): Model<Post> {

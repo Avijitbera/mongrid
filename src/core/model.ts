@@ -272,8 +272,13 @@ export class Model<T extends Document> {
                         as: fieldName as string,
                     },
                 });
-
-                if (relationship.type === RelationshipType.OneToOne || relationship.type === RelationshipType.OneToMany){
+                if (relationship.type === RelationshipType.OneToMany) {
+                    aggregationPipeline.push({
+                        $addFields: {
+                            [fieldName as string]: { $ifNull: [`$${fieldName as string}`, []] },
+                        },
+                    });
+                } else if (relationship.type === RelationshipType.OneToOne) {
                     aggregationPipeline.push({
                         $unwind: {
                             path: `$${fieldName as string}`,
@@ -342,46 +347,52 @@ export class Model<T extends Document> {
     
 
     async save(data: OptionalUnlessRequiredId<T>, options?: {session?: ClientSession}): Promise<ObjectId> {
-    await this.ensureCollection();
+        await this.ensureCollection();
         await this.validateDocument(data);
-
+    
+        // Check for required fields
         for (const [fieldName, field] of Object.entries(this.fields)) {
             const fieldOptions = field.getOptions();
             if (fieldOptions.required && data[fieldName] === undefined) {
-                throw new Error(`Missing required field: ${fieldName}`);
+                throw new MongridError(
+                    `Missing required field: ${fieldName}`,
+                    ERROR_CODES.VALIDATION_ERROR,
+                    { fieldName }
+                );
             }
         }
 
-        for (const [fieldName, relationship] of Object.entries(this.relationships)){
-            const foreignKeyValue = data[fieldName];
-            
-            if(foreignKeyValue){
-                const relatedModel = relationship.relatedModel;
-                const relatedDocument = await relatedModel.findById(foreignKeyValue);
-                
-                if(!relatedDocument){
-                    throw new Error(`Foreign key violation: ${fieldName} references a non-existent document.`)
-                }
+        // Validate relationships
+    for (const [fieldName, relationship] of Object.entries(this.relationships)) {
+        const foreignKeyValue = data[fieldName];
+        if (foreignKeyValue) {
+            const relatedModel = relationship.relatedModel;
+            const relatedDocument = await relatedModel.findById(foreignKeyValue);
+            if (!relatedDocument) {
+                throw new MongridError(
+                    `Foreign key violation: ${fieldName} references a non-existent document.`,
+                    ERROR_CODES.FOREIGN_KEY_VIOLATION,
+                    { fieldName, foreignKeyValue }
+                );
             }
         }
+    }
 
          // Apply default values
+    // Apply default values
     for (const [fieldName, field] of Object.entries(this.fields)) {
         const fieldOptions = field.getOptions();
-
-        // Apply default value for the top-level field if it's missing
         if (fieldOptions.default !== undefined && data[fieldName] === undefined) {
-            data[fieldName] = fieldOptions.default;
+            data[fieldName] = typeof fieldOptions.default === "function"
+                ? fieldOptions.default()
+                : fieldOptions.default;
         }
 
         // Handle nested fields
         if (field instanceof NestedField) {
-            // Ensure data[fieldName] is an object
             if (data[fieldName] === undefined) {
                 data[fieldName] = {};
             }
-
-            // Apply default values for nested fields if they are missing
             for (const [nestedFieldName, nestedField] of Object.entries(field.getFields())) {
                 const nestedFieldOptions = nestedField.getOptions();
                 if (nestedFieldOptions.default !== undefined && data[fieldName][nestedFieldName] === undefined) {
@@ -391,49 +402,64 @@ export class Model<T extends Document> {
         }
     }
         
-        for (const [fieldName, field] of Object.entries(this.fields)) {
-            const fieldOptions = field.getOptions();
-            if(fieldOptions.transform && data[fieldName] !== undefined){
-                data[fieldName] = fieldOptions.transform(data[fieldName]);
-                
-            }
+       // Apply transformations
+    for (const [fieldName, field] of Object.entries(this.fields)) {
+        const fieldOptions = field.getOptions();
+        if (fieldOptions.transform && data[fieldName] !== undefined) {
+            data[fieldName] = fieldOptions.transform(data[fieldName]);
         }
+    }
         
 
         
-        const aliasedData:any = {}
-        for(const [fieldName, field] of Object.entries(this.fields)){
-            const fieldOptions = field.getOptions();
-            const alias = fieldOptions.alias || fieldName;
-            aliasedData[alias] = data[fieldName];
-            
-            if(field instanceof NestedField){
-                
-                aliasedData[alias] = {}
-                for (const [nestedFieldName, nestedField] of Object.entries(field.getFields())) {
-                    // console.log({nestedFieldName, nestedField})
-                    const nestedFieldOptions = nestedField.getOptions();
-                    const nestedAlias = nestedFieldOptions.alias || nestedFieldName;
-                    // console.log({nestedAlias, fieldName, data: data})
-                    aliasedData[alias][nestedAlias] = data[fieldName][nestedFieldName];
-                }
-                
-            }else{
-                aliasedData[alias] = data[fieldName];
+    const aliasedData: any = {};
+    for (const [fieldName, field] of Object.entries(this.fields)) {
+        const fieldOptions = field.getOptions();
+        const alias = fieldOptions.alias || fieldName;
+        aliasedData[alias] = data[fieldName];
+
+        if (field instanceof NestedField) {
+            aliasedData[alias] = {};
+            for (const [nestedFieldName, nestedField] of Object.entries(field.getFields())) {
+                const nestedFieldOptions = nestedField.getOptions();
+                const nestedAlias = nestedFieldOptions.alias || nestedFieldName;
+                aliasedData[alias][nestedAlias] = data[fieldName][nestedFieldName];
             }
         }
-       
-        await this.ensureSchemaValidation();
-        await this.ensureIndexes();
-        await this.executeHooks(HookType.PreSave, aliasedData);
+    }
+        // Ensure schema validation and indexes
+    await this.ensureSchemaValidation();
+    await this.ensureIndexes();
+        // Execute pre-save hooks
+    await this.executeHooks(HookType.PreSave, aliasedData);
+
+         // Save the document
+    let _id: ObjectId;
+    if (aliasedData._id) {
+        // Update existing document
         const result = await this.collection.updateOne(
             { _id: aliasedData._id },
             { $set: aliasedData },
-            { upsert: true, session: options?.session }
+            { session: options?.session }
         );
+        if (result.matchedCount === 0) {
+            throw new MongridError(
+                "Document not found",
+                ERROR_CODES.DOCUMENT_NOT_FOUND,
+                { _id: aliasedData._id }
+            );
+        }
+        _id = aliasedData._id;
+    } else {
+        // Insert new document
+        const result = await this.collection.insertOne(aliasedData, { session: options?.session });
+        _id = result.insertedId;
+    }
         
-        await this.executeHooks(HookType.PostSave, aliasedData);
-        return aliasedData?._id || result.upsertedId!;
+        // Execute post-save hooks
+    await this.executeHooks(HookType.PostSave, aliasedData);
+
+    return _id;
     }
 
     private getBsonType(type: any): string{
