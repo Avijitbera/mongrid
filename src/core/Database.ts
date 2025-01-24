@@ -9,9 +9,21 @@ export class Database {
         return this.db.collection<T>(collectionName);
     }
 
+    /**
+     * Creates a new model for the specified collection.
+     *
+     * @param collectionName The name of the collection.
+     * @returns {Model<T>} The model instance.
+     */
     getModel<T extends Document>(collectionName: string): Model<T> {
         return new Model<T>(new Database(this.db), collectionName);
     }
+
+/**
+ * Returns the current database instance.
+ *
+ * @returns {Db} The MongoDB database instance.
+ */
 
     getDatabase(): Db {
         return this.db;
