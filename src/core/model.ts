@@ -18,13 +18,16 @@ export class Model<T extends Document> {
     private fields: {[key:string]: Field<any>} = {};
     private relationships: {[key: string]: RelationshipMetadata<T, any>} = {};
     private plugins: Plugin<T>[] = []; // Array of plugin instances>
-
+    /**
+     * Add a plugin to this model. The plugin will be executed when you call .install() on it.
+     * @param plugin The plugin to add.
+     * @returns The model instance.
+     */
     use(plugin: Plugin<T>) {
         this.plugins.push(plugin);
         plugin.install(this);
         return this;
     }
-
     /**
      * Construct a model class.
      * @param db The database connection.
@@ -33,7 +36,6 @@ export class Model<T extends Document> {
     constructor(private db: Database, collectionName: string) {
         this.collection = db.getCollection<T>(collectionName);
     }
-
     /**
      * Add a hook to be executed when a certain event occurs.
      * @param type The event type (e.g. preSave, postSave, preUpdate, postUpdate, preRemove, postRemove)
@@ -47,14 +49,13 @@ export class Model<T extends Document> {
         this.hooks[type].push(hook);
         return this;
     }
-
-/**
- * Executes all hooks of a given type for the specified document.
- * @param type The type of the hooks to execute (e.g., preSave, postSave).
- * @param document The document being processed through the hooks.
- * @returns A promise that resolves when all hooks have been executed.
- */
-
+    /**
+     * Executes all hooks of a given type for the specified document.
+     * @param type The type of the hooks to execute (e.g., preSave, postSave).
+     * @param document The document being processed through the hooks.
+     * @returns A promise that resolves when all hooks have been executed.
+     * @throws {MongridError} If a hook execution fails.
+     */
     private async executeHooks(type: HookType, document: T): Promise<void>{
         if (this.hooks[type]) {
             for (const hook of this.hooks[type]!) {
@@ -72,12 +73,21 @@ export class Model<T extends Document> {
             }
         }
     }
-
+    /**
+     * Adds a validator to the model.
+     * @param validator The validator to add.
+     * @returns The instance of the model for method chaining.
+     */
     addValidator(validator: Validator<T>): this {
         this.validators.push(validator);
         return this;
     }
-
+    /**
+     * Validates the given document.
+     * @param document The document to validate.
+     * @throws {MongridError} If the document is invalid.
+     * @returns A promise that resolves when the document has been validated.
+     */
     private async validateDocument(document: T | OptionalUnlessRequiredId<T>): Promise<void>{
         // Check for required fields
         for (const [fieldName, field] of Object.entries(this.fields)) {
@@ -111,7 +121,12 @@ export class Model<T extends Document> {
         }
 
     }
-
+    /**
+     * Adds a field to the model.
+     * @param name The name of the field.
+     * @param field The field to add.
+     * @returns The model instance.
+     */
     addField(name:string, field: Field<any>):this{
         this.fields[name] = field
         const fieldOptions = field.getOptions();
@@ -121,6 +136,10 @@ export class Model<T extends Document> {
             this.addHook(
                 HookType.PreUpdate,
                {
+        /**
+         * If the field is set, throws an error.
+         * @param document The document being updated.
+         */
                 execute: async(document: T) =>{
                     if(document[name] !== undefined){
                         throw new MongridError(
@@ -147,8 +166,6 @@ export class Model<T extends Document> {
                 this.addValidator(validator)
             }
         }
-
-      
         if(fieldOptions.index
             || fieldOptions.unique
         ){
@@ -174,13 +191,22 @@ export class Model<T extends Document> {
         }
         return this;
     }
-
+    /**
+     * Ensures that the indexes specified in the model are created in the underlying collection.
+     * This method is called automatically by the `ensureCollection` method.
+     * @returns {Promise<void>} Resolves when the indexes have been created.
+     */
     async ensureIndexes(): Promise<void> {
         if (this.indexes.length > 0) {
             await this.collection.createIndexes(this.indexes);
         }
     }
-
+    /**
+     * Ensures that the collection exists in the database. If the collection
+     * does not exist, it is created. This method also ensures that schema
+     * validation is applied to the collection.
+     * @returns {Promise<void>} Resolves when the collection is ensured.
+     */
     private async ensureCollection(): Promise<void>  {
         const collections = await this.db.getDatabase().listCollections({
             name: this.collection.collectionName
@@ -190,7 +216,17 @@ export class Model<T extends Document> {
         }
         await this.ensureSchemaValidation()
     }
-
+/**
+ * Ensures that schema validation is applied to the collection. Constructs a JSON schema
+ * validator based on the model's field definitions, including required fields, data types,
+ * and nested fields. Updates the collection with the schema validator, enforcing strict
+ * validation and errors on validation failures.
+ * 
+ * The validator includes properties for each field and nested field, defining their types
+ * and required status. Immutable fields are marked as readOnly in the schema.
+ * 
+ * @returns {Promise<void>} Resolves when the schema validation is ensured.
+ */
     async ensureSchemaValidation(): Promise<void> {
         const validator: { $jsonSchema: any } = {
             $jsonSchema: {
@@ -251,7 +287,13 @@ export class Model<T extends Document> {
         validationAction: 'error',
         })
     }
-
+/**
+     * Finds documents in the collection that match the given filter.
+     * @param filter The filter to apply to the query.
+     * @param options The MongoDB query options.
+     * @param populatedFields The fields to populate with related documents.
+     * @returns The found documents.
+     */
     async find<K extends keyof T>(
         filter: Filter<T> = {},
         options: FindOptions = {},
@@ -287,6 +329,12 @@ export class Model<T extends Document> {
         return documents;
     }
 
+    /**
+     * Finds a document by its ID and populates it with related documents if specified.
+     * @param id The ID of the document to find.
+     * @param populatedFields The fields to populate with related documents.
+     * @returns The found document or null if it doesn't exist.
+     */
     async findById<K extends keyof T>(
         id: ObjectId,
         populatedFields: K[] = []
@@ -295,9 +343,19 @@ export class Model<T extends Document> {
         return document[0] || null;
     }
 
+    /**
+     * Updates a document by its ID.
+     * @param id The ID of the document to update.
+     * @param data The data to update the document with.
+     * @param options Optional options to pass to the update method.
+     * @returns The result of the update operation.
+     */
     async updateById(id: ObjectId, data: Partial<T>, options?: {session?: ClientSession}): Promise<UpdateResult<T>>{
         return await this.collection.updateOne({_id: id} as Filter<T>, {$set: data}, {session: options?.session});
     }
+
+    
+
 
     async deleteById(id: ObjectId, options?: {session? : ClientSession}) : Promise<DeleteResult>{
         return await this.collection.deleteOne({
@@ -305,6 +363,12 @@ export class Model<T extends Document> {
         } as Filter<T>, {session: options?.session})
     }
 
+/**
+     * Adds a relationship to the model.
+     * @param fieldName The name of the field representing the relationship.
+     * @param relationshipMetadata The metadata describing the relationship.
+     * @returns The model instance.
+     */
     addRelationship<R extends Document>(
         fieldName: keyof T & string,
         relationshipMetadata: RelationshipMetadata<T, R>,
@@ -313,6 +377,13 @@ export class Model<T extends Document> {
         return this
     }
 
+    /**
+     * Updates multiple documents in the collection that match the given filter.
+     * @param filter The filter to match documents against.
+     * @param update The update to apply to the matched documents.
+     * @returns The number of documents that were modified.
+     * @throws {MongridError} If any of the fields in the update have the `immutable` option set to `true` and the field value is not undefined.
+     */
     async update(filter: Filter<T>,
         update: UpdateFilter<T>
     ): Promise<number>{
@@ -337,10 +408,14 @@ export class Model<T extends Document> {
         const result = await this.collection.updateMany(filter, update);
         return result.modifiedCount
     }
-
-   
-    
-
+    /**
+     * Saves a document to the collection.
+     * @param data The document to save.
+     * @param options Optional options.
+     * @returns The ObjectId of the saved document.
+     * @throws {Error} If any of the required fields are not present.
+     * @throws {MongridError} If the document fails validation, or if any of the fields have the `immutable` option set to `true` and the field value is not undefined.
+     */
     async save(data: OptionalUnlessRequiredId<T>, options?: {session?: ClientSession}): Promise<ObjectId> {
     await this.ensureCollection();
         await this.validateDocument(data);
@@ -397,10 +472,7 @@ export class Model<T extends Document> {
                 data[fieldName] = fieldOptions.transform(data[fieldName]);
                 
             }
-        }
-        
-
-        
+        }  
         const aliasedData:any = {}
         for(const [fieldName, field] of Object.entries(this.fields)){
             const fieldOptions = field.getOptions();
@@ -436,6 +508,11 @@ export class Model<T extends Document> {
         return aliasedData?._id || result.upsertedId!;
     }
 
+    /**
+     * Returns the BSON type of the given JavaScript type.
+     * @param type The JavaScript type to convert to a BSON type.
+     * @returns The BSON type of the given JavaScript type.
+     */
     private getBsonType(type: any): string{
         if(type === String) return 'string';
         if(type === Number) return 'number';
