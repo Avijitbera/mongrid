@@ -362,6 +362,13 @@ export class Model<T extends Document> {
     
 
 
+/**
+ * Deletes a document from the collection by its ID.
+ * @param id The ID of the document to delete.
+ * @param options Optional settings for the delete operation, including a session for transaction support.
+ * @returns A promise that resolves to the result of the delete operation.
+ */
+
     async deleteById(id: ObjectId, options?: {session? : ClientSession}) : Promise<DeleteResult>{
         return await this.collection.deleteOne({
             _id: id
