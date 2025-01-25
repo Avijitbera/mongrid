@@ -304,32 +304,40 @@ export class Model<T extends Document> {
         for (const fieldName of populatedFields){
             const relationship = this.relationships[fieldName as string];
             if(relationship){
+            console.log({relationship})
                 const relatedModel = relationship.relatedModel;
-                const foreignKey = relationship.foreignKey;
+            const foreignKey = relationship.foreignKey;
+
+
+            aggregationPipeline.push({
+                $lookup: {
+                    from: relatedModel.collection.collectionName,
+                    localField: "_id", // Use the _id of the current document
+                    foreignField: foreignKey, // Match with the foreignKey in the related collection
+                    as: fieldName as string,
+                },
+            });
+
+            
+            if (relationship.type === RelationshipType.OneToMany) {
                 aggregationPipeline.push({
-                    $lookup: {
-                        from: relatedModel.collection.collectionName,
-                        localField: foreignKey,
-                        foreignField: '_id',
-                        as: fieldName as string,
+                    $addFields: {
+                        [fieldName as string]: { $ifNull: [`$${fieldName as string}`, []] },
                     },
                 });
-                if (relationship.type === RelationshipType.OneToMany) {
-                    aggregationPipeline.push({
-                        $addFields: {
-                            [fieldName as string]: { $ifNull: [`$${fieldName as string}`, []] },
-                        },
-                    });
-                } else if (relationship.type === RelationshipType.OneToOne) {
-                    aggregationPipeline.push({
-                        $unwind: {
-                            path: `$${fieldName as string}`,
-                            preserveNullAndEmptyArrays: true,
-                        },
-                    });
-                }
+            }
+            if (relationship.type === RelationshipType.OneToOne) {
+                aggregationPipeline.push({
+                    $unwind: {
+                        path: `$${fieldName as string}`,
+                        preserveNullAndEmptyArrays: true,
+                    },
+                });
+            }
             }
         }
+        
+        console.log(aggregationPipeline);
         const documents = await this.collection.aggregate<T>(aggregationPipeline).toArray();
         return documents;
     }
@@ -516,32 +524,32 @@ export class Model<T extends Document> {
     await this.executeHooks(HookType.PreSave, aliasedData);
 
          // Save the document
-    let _id: ObjectId;
-    if (aliasedData._id) {
-        // Update existing document
-        const result = await this.collection.updateOne(
-            { _id: aliasedData._id },
-            { $set: aliasedData },
-            { session: options?.session }
-        );
-        if (result.matchedCount === 0) {
-            throw new MongridError(
-                "Document not found",
-                ERROR_CODES.DOCUMENT_NOT_FOUND,
-                { _id: aliasedData._id }
-            );
-        }
-        _id = aliasedData._id;
-    } else {
-        // Insert new document
-        const result = await this.collection.insertOne(aliasedData, { session: options?.session });
-        _id = result.insertedId;
-    }
-        
-        // Execute post-save hooks
-    await this.executeHooks(HookType.PostSave, aliasedData);
-
-    return _id;
+         let _id: ObjectId;
+         if (aliasedData._id) {
+             // Update existing document
+             const result = await this.collection.updateOne(
+                 { _id: aliasedData._id },
+                 { $set: aliasedData },
+                 { session: options?.session }
+             );
+             if (result.matchedCount === 0) {
+                 throw new MongridError(
+                     "Document not found",
+                     ERROR_CODES.DOCUMENT_NOT_FOUND,
+                     { _id: aliasedData._id }
+                 );
+             }
+             _id = aliasedData._id;
+         } else {
+             // Insert new document
+             const result = await this.collection.insertOne(aliasedData, { session: options?.session });
+             _id = result.insertedId;
+         }
+     
+         // Execute post-save hooks
+         await this.executeHooks(HookType.PostSave, aliasedData);
+     
+         return _id;
     }
 
     /**
