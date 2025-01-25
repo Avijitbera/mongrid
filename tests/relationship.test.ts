@@ -72,4 +72,30 @@ postModel.addRelationship("user", new RelationshipMetadata(
         
     });
 
+    it("should retrieve a post with its associated user (One-to-One)", async () => {
+        const userId = await userModel.save({
+            id: "user1",
+            name: "Alice",
+        });
+    
+        // Save a post for the user
+        const postId = await postModel.save({
+            id: "post1",
+            title: "First Post",
+            userId: new ObjectId(userId), // Ensure userId is an ObjectId
+        });
+
+        // Retrieve the post with its associated user
+    const postWithUser = await postModel.findById(new ObjectId(postId), ["user"]);
+
+    // Log the result for debugging
+    console.log({ postWithUser });
+
+    // Assertions
+    expect(postWithUser).toBeDefined();
+    expect(postWithUser?.user).toBeDefined();
+    expect(postWithUser?.user?.id).toBe("user1");
+    expect(postWithUser?.user?.name).toBe("Alice");
+    })
+
 })
