@@ -304,7 +304,7 @@ export class Model<T extends Document> {
         for (const fieldName of populatedFields){
             const relationship = this.relationships[fieldName as string];
             if(relationship){
-            console.log({relationship})
+            
                 const relatedModel = relationship.relatedModel;
             const foreignKey = relationship.foreignKey;
 
@@ -312,32 +312,32 @@ export class Model<T extends Document> {
             aggregationPipeline.push({
                 $lookup: {
                     from: relatedModel.collection.collectionName,
-                    localField: "_id", // Use the _id of the current document
-                    foreignField: foreignKey, // Match with the foreignKey in the related collection
+                    localField: relationship.type === RelationshipType.OneToOne ? foreignKey : "_id", // Use foreignKey for OneToOne, _id for OneToMany
+                    foreignField: relationship.type === RelationshipType.OneToOne ? "_id" : foreignKey, // Use _id for OneToOne, foreignKey for OneToMany
                     as: fieldName as string,
                 },
             });
-
             
-            if (relationship.type === RelationshipType.OneToMany) {
-                aggregationPipeline.push({
-                    $addFields: {
-                        [fieldName as string]: { $ifNull: [`$${fieldName as string}`, []] },
-                    },
-                });
-            }
             if (relationship.type === RelationshipType.OneToOne) {
                 aggregationPipeline.push({
                     $unwind: {
                         path: `$${fieldName as string}`,
-                        preserveNullAndEmptyArrays: true,
+                        preserveNullAndEmptyArrays: true, // Ensure the field is null if no match is found
+                    },
+                });
+            }
+
+            if (relationship.type === RelationshipType.OneToMany) {
+                aggregationPipeline.push({
+                    $addFields: {
+                        [fieldName as string]: { $ifNull: [`$${fieldName as string}`, []] }, // Ensure the field is an array (even if empty)
                     },
                 });
             }
             }
         }
         
-        console.log(aggregationPipeline);
+        
         const documents = await this.collection.aggregate<T>(aggregationPipeline).toArray();
         return documents;
     }

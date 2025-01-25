@@ -39,22 +39,22 @@ postModel.addRelationship("user", new RelationshipMetadata(
         // Save a user
         
         const userId = await userModel.save({
-            id: "user1",
-            name: "Alice",
+            id: "user2",
+            name: "Alice1",
         });
 
        
 
         // Save posts for the user
         await postModel.save({
-            id: "post1",
-            title: "First Post",
+            id: "post01",
+            title: "First Post 01",
             userId: new ObjectId(userId), // Use the userId returned from saving the user
         });
 
         await postModel.save({
-            id: "post2",
-            title: "Second Post",
+            id: "post02",
+            title: "Second Post 02",
             userId: new ObjectId(userId), // Use the userId returned from saving the user
         });
 
@@ -67,8 +67,8 @@ postModel.addRelationship("user", new RelationshipMetadata(
         expect(userWithPosts).toBeDefined();
         expect(userWithPosts?.posts).toBeInstanceOf(Array); // Ensure posts is an array
         expect(userWithPosts?.posts).toHaveLength(2); // Ensure there are 2 posts
-        expect(userWithPosts?.posts![0].title).toBe("First Post");
-        expect(userWithPosts?.posts![1].title).toBe("Second Post");
+        expect(userWithPosts?.posts![0].title).toBe("First Post 01");
+        expect(userWithPosts?.posts![1].title).toBe("Second Post 02");
         
     });
 
@@ -84,12 +84,11 @@ postModel.addRelationship("user", new RelationshipMetadata(
             title: "First Post",
             userId: new ObjectId(userId), // Ensure userId is an ObjectId
         });
-
+    
         // Retrieve the post with its associated user
-    const postWithUser = await postModel.findById(new ObjectId(postId), ["user"]);
-
-    // Log the result for debugging
-    console.log({ postWithUser });
+        const postWithUser = await postModel.findById(new ObjectId(postId), ["user"]);
+    
+    
 
     // Assertions
     expect(postWithUser).toBeDefined();
