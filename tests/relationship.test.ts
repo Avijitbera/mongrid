@@ -97,4 +97,35 @@ postModel.addRelationship("user", new RelationshipMetadata(
     expect(postWithUser?.user?.name).toBe("Alice");
     })
 
+    it("should handle non-existent relationships gracefully", async () => {
+        // Save a user without any posts
+        const userId = await userModel.save({
+            id: "user1",
+            name: "Alice",
+        });
+    
+        // Retrieve the user with populated posts
+        const userWithPosts = await userModel.findById(new ObjectId(userId), ["posts"]);
+        expect(userWithPosts).toBeDefined();
+        expect(userWithPosts?.posts).toBeInstanceOf(Array); // Ensure posts is an array
+        expect(userWithPosts?.posts).toHaveLength(0); 
+
+        // Save a post without a user (invalid userId)
+    const postId = await postModel.save({
+        id: "post1",
+        title: "Orphan Post",
+        userId: new ObjectId(), // Invalid userId
+    });
+
+    // Retrieve the post with its associated user
+    const postWithUser = await postModel.findById(new ObjectId(postId), ["user"]);
+
+    // Log the result for debugging
+   
+
+    // Assertions
+    expect(postWithUser).toBeDefined();
+    expect(postWithUser?.user).toBeNull(); // Ensure user is null // Ensure user is null
+    });
+
 })

@@ -318,27 +318,36 @@ export class Model<T extends Document> {
                 },
             });
             
-            if (relationship.type === RelationshipType.OneToOne) {
-                aggregationPipeline.push({
-                    $unwind: {
-                        path: `$${fieldName as string}`,
-                        preserveNullAndEmptyArrays: true, // Ensure the field is null if no match is found
-                    },
-                });
-            }
+           // Handle OneToOne relationship
+           if (relationship.type === RelationshipType.OneToOne) {
+            aggregationPipeline.push({
+                $unwind: {
+                    path: `$${fieldName as string}`,
+                    preserveNullAndEmptyArrays: true, // Ensure the field is null if no match is found
+                },
+            });
+        }
 
-            if (relationship.type === RelationshipType.OneToMany) {
-                aggregationPipeline.push({
-                    $addFields: {
-                        [fieldName as string]: { $ifNull: [`$${fieldName as string}`, []] }, // Ensure the field is an array (even if empty)
-                    },
-                });
-            }
+           // Handle OneToMany relationship
+           if (relationship.type === RelationshipType.OneToMany) {
+            aggregationPipeline.push({
+                $addFields: {
+                    [fieldName as string]: { $ifNull: [`$${fieldName as string}`, []] }, // Ensure the field is an array (even if empty)
+                },
+            });
+        }
             }
         }
         
         
         const documents = await this.collection.aggregate<T>(aggregationPipeline).toArray();
+        for (const document of documents) {
+            for (const fieldName of populatedFields) {
+                if (document[fieldName] === undefined) {
+                    (document[fieldName] as T[K] | null) = null; // Set the field to null if it is undefined
+                }
+            }
+        }
         return documents;
     }
 
