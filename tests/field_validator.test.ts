@@ -36,4 +36,15 @@ describe('Field Validation Tests', () => {
         ).rejects.toThrow("Missing required field: name");
     });
 
+    it('should throw an error when saving a product with invalid field types', async () => {
+        await expect(
+            productModel.save({
+                id: "123",
+                name: "Laptop",
+                price: "invalid", // Invalid type for "price"
+                quantity: 10,
+            } as any) // Cast to "any" to bypass TypeScript checks for testing
+        ).rejects.toThrow("Document validation failed");
+    });
+
 })
