@@ -26,4 +26,14 @@ describe('Field Validation Tests', () => {
             .addField("quantity", new FieldBuilder<number>("quantity").type(Number).required().build());
     });
 
+    it('should throw an error when saving a product with missing required fields', async () => {
+        await expect(
+            productModel.save({
+                id: "123",
+                // Missing "name" and "price" fields
+                quantity: 10,
+            } as any) // Cast to "any" to bypass TypeScript checks for testing
+        ).rejects.toThrow("Missing required field: name");
+    });
+
 })
