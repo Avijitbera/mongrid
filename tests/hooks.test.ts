@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { Database, FieldBuilder, HookType, Model } from '../src';
 import {connect} from './db'
+import { ObjectId } from '../src/types';
 
 
 dotenv.config();
@@ -53,5 +54,17 @@ describe('Hooks Tests', () => {
                 status: "pending",
             })
         ).rejects.toThrow("Order total must be greater than 0");
+    });
+
+    it('should execute post-save hook and update the order status', async () => {
+        const orderId = await orderModel.save({
+            id: "456",
+            total: 100,
+            status: "pending",
+        });
+
+        const order = await orderModel.findById(new ObjectId(orderId));
+        expect(order).toBeDefined();
+        expect(order?.status).toBe("completed");
     });
 })
