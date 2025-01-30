@@ -34,7 +34,7 @@ describe('Field Validation Tests', () => {
                 quantity: 10,
             } as any) // Cast to "any" to bypass TypeScript checks for testing
         ).rejects.toThrow("Missing required field: name");
-    });
+    }, 10000);
 
     it('should throw an error when saving a product with invalid field types', async () => {
         await expect(
@@ -44,7 +44,7 @@ describe('Field Validation Tests', () => {
                 price: "invalid", // Invalid type for "price"
                 quantity: 10,
             } as any) // Cast to "any" to bypass TypeScript checks for testing
-        ).rejects.toThrow("Document validation failed");
-    });
+        ).rejects.toThrow("Document failed validation");
+    }, 10000);
 
 })

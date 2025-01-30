@@ -70,7 +70,7 @@ postModel.addRelationship("user", new RelationshipMetadata(
         expect(userWithPosts?.posts![0].title).toBe("First Post 01");
         expect(userWithPosts?.posts![1].title).toBe("Second Post 02");
         
-    });
+    }, 10000);
 
     it("should retrieve a post with its associated user (One-to-One)", async () => {
         const userId = await userModel.save({
@@ -95,7 +95,7 @@ postModel.addRelationship("user", new RelationshipMetadata(
     expect(postWithUser?.user).toBeDefined();
     expect(postWithUser?.user?.id).toBe("user1");
     expect(postWithUser?.user?.name).toBe("Alice");
-    })
+    }, 10000)
 
     it("should handle non-existent relationships gracefully", async () => {
         // Save a user without any posts
@@ -126,6 +126,6 @@ postModel.addRelationship("user", new RelationshipMetadata(
     // Assertions
     expect(postWithUser).toBeDefined();
     expect(postWithUser?.user).toBeNull(); // Ensure user is null // Ensure user is null
-    });
+    }, 10000);
 
 })

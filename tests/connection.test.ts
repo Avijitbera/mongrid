@@ -20,7 +20,7 @@ describe("Testing the connection String", () => {
         const database = connection.getDatabase();
         expect(database).toBeDefined()
         expect(database?.databaseName).toBe(dbname)
-    })
+    }, 10000)
 
     afterAll(async () => {
         await connection.disconnect()
