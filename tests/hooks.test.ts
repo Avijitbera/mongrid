@@ -40,4 +40,18 @@ describe('Hooks Tests', () => {
             }
         });
     });
+
+    afterAll(async () => {
+        // await cleanup();
+    });
+
+    it('should execute pre-save hook and throw an error for invalid order total', async () => {
+        await expect(
+            orderModel.save({
+                id: "123",
+                total: -10, // Invalid total
+                status: "pending",
+            })
+        ).rejects.toThrow("Order total must be greater than 0");
+    });
 })
