@@ -18,6 +18,11 @@ export class Model<T extends Document> {
     private fields: {[key:string]: Field<any>} = {};
     private relationships: {[key: string]: RelationshipMetadata<T, any>} = {};
     private plugins: Plugin<T>[] = []; // Array of plugin instances>
+
+    getCollection(): Collection<T> {
+        return this.collection;
+    }
+
     /**
      * Add a plugin to this model. The plugin will be executed when you call .install() on it.
      * @param plugin The plugin to add.

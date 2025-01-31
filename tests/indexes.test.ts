@@ -39,4 +39,9 @@ describe('Indexes Tests', () => {
             })
         ).rejects.toThrow("duplicate key error");
     });
+
+    it('should create an index on the name field', async () => {
+        const indexes = await productModel.getCollection().indexInformation();
+        expect(indexes).toContainEqual(expect.objectContaining({ name: 1 }));
+    });
 })
