@@ -52,4 +52,18 @@ describe('Nested Fields Tests', () =>{
         expect(customer?.address.city).toBe("New York");
         expect(customer?.address.zip).toBe("10001");
     });
+
+
+    it('should throw an error when saving a customer with missing nested required fields', async () => {
+        await expect(
+            customerModel.save({
+                id: "456",
+                name: "Jane Doe",
+                address: {
+                    street: "456 Elm St",
+                    // Missing "city" and "zip" fields
+                } as any, // Cast to "any" to bypass TypeScript checks for testing
+            })
+        ).rejects.toThrow("Missing required field: city");
+    });
 })
