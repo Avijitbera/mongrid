@@ -23,4 +23,20 @@ describe('Indexes Tests', () => {
             .addField("sku", new FieldBuilder<string>("sku").type(String).unique().build())
             .addField("name", new FieldBuilder<string>("name").type(String).index().build());
     }, 10000);
+
+    it('should enforce unique constraint on the sku field', async () => {
+        await productModel.save({
+            id: "123",
+            sku: "SKU123",
+            name: "Product 1",
+        });
+
+        await expect(
+            productModel.save({
+                id: "456",
+                sku: "SKU123", // Duplicate SKU
+                name: "Product 2",
+            })
+        ).rejects.toThrow("duplicate key error");
+    });
 })
