@@ -15,3 +15,8 @@ interface Customer {
     name: string;
     address: Address;
 }
+
+describe('Nested Fields Tests', () =>{
+    let db: Database;
+    let customerModel: Model<Customer>;
+})
