@@ -19,4 +19,18 @@ interface Customer {
 describe('Nested Fields Tests', () =>{
     let db: Database;
     let customerModel: Model<Customer>;
+    beforeAll(async () => {
+        const mongodb = await connect();
+        db = new Database(mongodb);
+
+        const addressField = new NestedField<Address>("address")
+            .addField("street", new FieldBuilder<string>("street").type(String).required().build())
+            .addField("city", new FieldBuilder<string>("city").type(String).required().build())
+            .addField("zip", new FieldBuilder<string>("zip").type(String).required().build());
+
+        customerModel = new Model<Customer>(db, "customers")
+            .addField("id", new FieldBuilder<string>("id").type(String).required().build())
+            .addField("name", new FieldBuilder<string>("name").type(String).required().build())
+            .addField("address", addressField);
+    }, 10000);
 })
