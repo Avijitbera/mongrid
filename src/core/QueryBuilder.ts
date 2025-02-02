@@ -1,4 +1,4 @@
-import { Filter, Document, FindOptions, ObjectId, WithId } from "mongodb";
+import { Filter, Document, FindOptions, ObjectId, WithId, ClientSession } from "mongodb";
 import { Model } from "./model";
 import { equal, notEqual } from "assert";
 import { ERROR_CODES, MongridError } from "../error/MongridError";
@@ -28,8 +28,21 @@ export class QueryBuilder<T extends Document>{
     private filter: Filter<T> = {};
     private options: FindOptions = {};
     private populatedFields: (keyof T)[] = [];
+    private session: ClientSession | null = null;
+
+
 
     constructor(private model: Model<T>){}
+
+/**
+     * Sets the transaction session for the query.
+     * @param session The MongoDB client session.
+     * @returns The QueryBuilder instance for chaining.
+     */
+    setSession(session: ClientSession): this {
+        this.session = session;
+        return this;
+    }
 
 
     where<K extends keyof T>(

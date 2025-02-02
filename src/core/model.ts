@@ -567,6 +567,16 @@ export class Model<T extends Document> {
     }
 
     /**
+     * Delete documents matching the filter.
+     * @param filter The MongoDB filter.
+     * @returns The number of documents deleted.
+     */
+    async delete(filter: Filter<T> = {}): Promise<number> {
+        const result = await this.collection.deleteMany(filter);
+        return result.deletedCount;
+    }
+
+    /**
      * Returns the BSON type of the given JavaScript type.
      * @param type The JavaScript type to convert to a BSON type.
      * @returns The BSON type of the given JavaScript type.
