@@ -39,9 +39,38 @@ export class QueryBuilder<T extends Document>{
     private aggregationPipeline: any[] = [];
     private page: number = 1; // Pagination page number
     private pageSize: number = 10; // Pagination page size
-
+    private pluginMethods: { [key: string]: (...args: any[]) => QueryBuilder<T> } = {};
 
     constructor(private model: Model<T>){}
+
+
+    /**
+     * Adds a custom method to the QueryBuilder.
+     * @param methodName The name of the method.
+     * @param method The method implementation.
+     */
+    addPluginMethod(methodName: string, method: (...args: any[]) => this): this {
+        this.pluginMethods[methodName] = method;
+        return this;
+    }
+
+    /**
+     * Dynamically calls a plugin method.
+     * @param methodName The name of the method.
+     * @param args The arguments to pass to the method.
+     * @returns The QueryBuilder instance for chaining.
+     * @throws {MongridError} If the method does not exist.
+     */
+    callPluginMethod(methodName: string, ...args: any[]): this {
+        if (this.pluginMethods[methodName]) {
+            return this.pluginMethods[methodName](...args) as this;
+        }
+        throw new MongridError(
+            `Plugin method '${methodName}' not found`,
+            ERROR_CODES.PLUGIN_METHOD_NOT_FOUND
+        );
+    }
+
 
 /**
      * Sets the transaction session for the query.
