@@ -197,7 +197,13 @@ export class QueryBuilder<T extends Document>{
     async execute(): Promise<T[]> {
         try {
             
-            return this.model.find(this.filter, this.options, this.populatedFields);
+            if (this.aggregationPipeline.length > 0) {
+                // Use aggregation pipeline if stages are added
+                return this.model.getCollection().aggregate<T>(this.aggregationPipeline, { session: this.session! }).toArray();
+            } else {
+                // Use find query with filter, options, and populated fields
+                return this.model.find(this.filter, { ...this.options, sort: this.sort, projection: this.projection, session: this.session! }, this.populatedFields);
+            }
         } catch (error:any) {
             throw new MongridError(
                 `Query execution failed: ${error.message}`,
