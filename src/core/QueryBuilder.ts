@@ -13,6 +13,11 @@ type ComparisonOperators<T> = {
     lessThanOrEqual?: T;
     in?:T[],
     notIn?:T[],
+    exists?: boolean;
+    regex?: RegExp;
+    text?: string;
+    // near?: GeoNearOptions;
+    // within?: GeoWithinOptions;
 }
 
 type LogicalOperators<T> = {
@@ -62,6 +67,11 @@ export class QueryBuilder<T extends Document>{
             lessThanOrEqual: '$lte',
             in: '$in',
             notIn: '$nin',
+            exists: '$exists',
+            regex: '$regex',
+            text: '$text',
+            // near: '$near',
+            // within: '$geoWithin',
         };
 
         const mongoOperator = mongoOperatorMap[operator] as keyof QueryOperators<T[K]>;
