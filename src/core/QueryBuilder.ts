@@ -1,4 +1,4 @@
-import { Filter, Document, FindOptions, ObjectId, WithId, ClientSession, Sort } from "mongodb";
+import { Filter, Document, FindOptions, ObjectId, WithId, ClientSession, Sort, ExplainVerbosityLike } from "mongodb";
 import { Model } from "./model";
 import { equal, notEqual } from "assert";
 import { ERROR_CODES, MongridError } from "../error/MongridError";
@@ -36,7 +36,9 @@ export class QueryBuilder<T extends Document>{
     private session: ClientSession | null = null;
     private sort: Sort = {};
     private projection: { [key: string]: 1 | 0 } = {};
-
+    private aggregationPipeline: any[] = [];
+    private page: number = 1; // Pagination page number
+    private pageSize: number = 10; // Pagination page size
 
 
     constructor(private model: Model<T>){}
@@ -147,6 +149,49 @@ export class QueryBuilder<T extends Document>{
     select(projection: {[key: string]: 1 | 0}):this {
         this.projection = projection;
         return this
+    }
+
+    aggregate(stage:any):this {
+        this.aggregationPipeline.push(stage);
+        return this;
+    }
+
+    paginate(page:number, pageSize:number):this{
+        this.page = page;
+        this.pageSize = pageSize;
+        this.options.skip = (page - 1) * pageSize;
+        this.options.limit = pageSize;
+        return this;
+    }
+
+    async count():Promise<number>{
+        try {
+            return this.model.getCollection().countDocuments(this.filter, { session: this.session! });
+        } catch (error: any) {
+            throw new MongridError(
+                `Count failed: ${error.message}`,
+                ERROR_CODES.COUNT_ERROR,
+                { filter: this.filter }
+            );
+        }
+    }
+
+    /**
+     * Explains the query execution plan.
+     * @param verbosity The verbosity level for the explanation.
+     * @returns A promise that resolves to the query execution plan.
+     * @throws {MongridError} If the explain operation fails.
+     */
+    async explain(verbosity: ExplainVerbosityLike = "queryPlanner"): Promise<any> {
+        try {
+            return this.model.getCollection().find(this.filter, { ...this.options, session: this.session! }).explain(verbosity);
+        } catch (error: any) {
+            throw new MongridError(
+                `Explain failed: ${error.message}`,
+                ERROR_CODES.EXPLAIN_ERROR,
+                { filter: this.filter, options: this.options }
+            );
+        }
     }
 
     async execute(): Promise<T[]> {
