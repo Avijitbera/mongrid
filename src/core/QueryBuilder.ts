@@ -1,4 +1,4 @@
-import { Filter, Document, FindOptions, ObjectId, WithId, ClientSession } from "mongodb";
+import { Filter, Document, FindOptions, ObjectId, WithId, ClientSession, Sort } from "mongodb";
 import { Model } from "./model";
 import { equal, notEqual } from "assert";
 import { ERROR_CODES, MongridError } from "../error/MongridError";
@@ -34,6 +34,8 @@ export class QueryBuilder<T extends Document>{
     private options: FindOptions = {};
     private populatedFields: (keyof T)[] = [];
     private session: ClientSession | null = null;
+    private sort: Sort = {};
+    private projection: { [key: string]: 1 | 0 } = {};
 
 
 
@@ -80,7 +82,12 @@ export class QueryBuilder<T extends Document>{
             let refinedValue: any;
             if (operator === 'in' || operator === 'notIn') {
                 refinedValue = value as T[K][]; // Ensure value is an array for $in and $nin
-            } else {
+            } else if (operator === 'regex'){
+                refinedValue = value as RegExp;
+            }else if(operator === 'text'){
+                refinedValue = { $search: value as string };
+            }
+             else {
                 refinedValue = value as T[K]; // Ensure value is a single value for other operators
             }
 
@@ -129,6 +136,16 @@ export class QueryBuilder<T extends Document>{
 
     populate<K extends keyof T>(...fields: K[]):this{
         this.populatedFields.push(...fields);
+        return this
+    }
+
+    sortBy(sort:Sort):this {
+        this.sort = sort;
+        return this;
+    }
+
+    select(projection: {[key: string]: 1 | 0}):this {
+        this.projection = projection;
         return this
     }
 
