@@ -19,12 +19,24 @@ export class GeoPointPlugin<T extends Document> implements Plugin<T> {
 
     private validateGeoPoint(document:T): void{
         for(const [key, value] of Object.entries(document)){
-            
+            if(this.isGeoPoint(value)){
+                this.geoPointType.validate(value);
+            }
         }
     }
 
     private isGeoPoint(value:any): value is GeoPoint {
         return value &&  typeof value === 'object' && "type" in value && "coordinates" in value;
+    }
+
+    private transformGeoPoint(document:T): T{
+        const transformedDocument = {...document};
+        for(const [key, value] of Object.entries(transformedDocument)){
+            if(this.isGeoPoint(value)){
+                (transformedDocument[key] as { [key: string]: any })[key] = this.geoPointType.trasform(value);
+            }
+        }
+        return transformedDocument;
     }
 
 
