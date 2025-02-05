@@ -1,5 +1,6 @@
 
-export abstract class CustomType {
-    abstract serialize(value: any): any;
-    abstract deserialize(value: any): any;
+export interface CustomType<T> {
+     validate(value: T): void;
+     trasform(value: T): T;
+     toMongoSchema(): any;
 }
