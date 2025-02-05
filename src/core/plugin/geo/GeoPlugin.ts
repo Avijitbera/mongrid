@@ -15,7 +15,12 @@ export interface GeoPoint {
 export class GeoPlugin<T extends Document> implements Plugin<T> {
     private geoField: {[key:string]: Field<GeoPoint>} = {};
     install(model: Model<T>): void {
-        throw new Error("Method not implemented.");
+        for(const [fileName, field] of Object.entries(this.geoField)){
+            model.addField(fileName, field);
+        }
+        
     }
+
+
 
 }
