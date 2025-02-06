@@ -33,5 +33,9 @@ export class SoftDeletePlugin<T extends Document> implements Plugin<T> {
         queryBuilder.withDeleted = (): QueryBuilder<T> => {
             return queryBuilder.where(this.deletedAtField, "exists", true)
         }
+
+        queryBuilder.onlyDeleted = (): QueryBuilder<T> => {
+            return queryBuilder.where(this.deletedAtField, "exists", true);
+        };
     }
 }
