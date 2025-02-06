@@ -15,5 +15,16 @@ export class SoftDeletePlugin<T extends Document> implements Plugin<T> {
                 [this.deletedAtField]:new Date()
             } as Partial<T>)
         }
+
+        model.restore = async(id: ObjectId): Promise<void> => {
+            await model.updateById(id, {
+                [this.deletedAtField]:null
+            } as Partial<T>)
+        }
+        const originalFind = model.find.bind(model);
+        model.find = async (filter = {}, options = {}, populatedFields = []): Promise<T[]> => {
+            const softDeleteFilter = { [this.deletedAtField]: null };
+            return originalFind({ ...filter, ...softDeleteFilter }, options, populatedFields);
+        };
     }
 }
