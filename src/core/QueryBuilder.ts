@@ -2,6 +2,7 @@ import { Filter, Document, FindOptions, ObjectId, WithId, ClientSession, Sort, E
 import { Model } from "./model";
 import { equal, notEqual } from "assert";
 import { ERROR_CODES, MongridError } from "../error/MongridError";
+import { Plugin } from "./plugin/plugin";
 
 
 type ComparisonOperators<T> = {
@@ -39,37 +40,26 @@ export class QueryBuilder<T extends Document>{
     private aggregationPipeline: any[] = [];
     private page: number = 1; // Pagination page number
     private pageSize: number = 10; // Pagination page size
-    private pluginMethods: { [key: string]: (...args: any[]) => QueryBuilder<T> } = {};
+    private plugins: Plugin<T>[] = [];
 
+    
     constructor(private model: Model<T>){}
 
 
     /**
-     * Adds a custom method to the QueryBuilder.
-     * @param methodName The name of the method.
-     * @param method The method implementation.
+     * Adds a plugin to the query builder.
+     * @param plugin The plugin to add.
+     * @returns The query builder instance for method chaining.
      */
-    addPluginMethod(methodName: string, method: (...args: any[]) => this): this {
-        this.pluginMethods[methodName] = method;
+    use(plugin: Plugin<T>): this {
+        this.plugins.push(plugin);
+        if (plugin.installQueryBuilder) {
+            plugin.installQueryBuilder(this);
+        }
         return this;
     }
 
-    /**
-     * Dynamically calls a plugin method.
-     * @param methodName The name of the method.
-     * @param args The arguments to pass to the method.
-     * @returns The QueryBuilder instance for chaining.
-     * @throws {MongridError} If the method does not exist.
-     */
-    callPluginMethod(methodName: string, ...args: any[]): this {
-        if (this.pluginMethods[methodName]) {
-            return this.pluginMethods[methodName](...args) as this;
-        }
-        throw new MongridError(
-            `Plugin method '${methodName}' not found`,
-            ERROR_CODES.PLUGIN_METHOD_NOT_FOUND
-        );
-    }
+    
 
 
 /**

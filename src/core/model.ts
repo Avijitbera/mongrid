@@ -30,7 +30,9 @@ export class Model<T extends Document> {
      */
     use(plugin: Plugin<T>) {
         this.plugins.push(plugin);
-        plugin.install(this);
+        if (plugin.installModel) {
+            plugin.installModel(this);
+        }
         return this;
     }
     /**
