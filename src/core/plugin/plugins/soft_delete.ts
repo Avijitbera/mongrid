@@ -2,6 +2,7 @@ import { Document, ObjectId } from "mongodb";
 import { Plugin } from "../plugin";
 import { Model } from "../../model";
 import { Field } from "../../fields/Field";
+import { QueryBuilder } from "../../QueryBuilder";
 
 
 export class SoftDeletePlugin<T extends Document> implements Plugin<T> {
@@ -26,5 +27,11 @@ export class SoftDeletePlugin<T extends Document> implements Plugin<T> {
             const softDeleteFilter = { [this.deletedAtField]: null };
             return originalFind({ ...filter, ...softDeleteFilter }, options, populatedFields);
         };
+    }
+
+    installQueryBuilder(queryBuilder: QueryBuilder<T>): void {
+        queryBuilder.withDeleted = (): QueryBuilder<T> => {
+            return queryBuilder.where(this.deletedAtField, "exists", true)
+        }
     }
 }

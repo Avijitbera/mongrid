@@ -16,3 +16,18 @@ declare module "../../model" {
         restore(id: ObjectId): Promise<void>;
     }
 }
+
+
+declare module "../../QueryBuilder" {
+    interface QueryBuilder<T extends Document> {
+        /**
+         * Includes soft-deleted documents in the query results.
+         */
+        withDeleted(): QueryBuilder<T>;
+
+        /**
+         * Only includes soft-deleted documents in the query results.
+         */
+        onlyDeleted(): QueryBuilder<T>;
+    }
+}

@@ -76,7 +76,7 @@ export class QueryBuilder<T extends Document>{
     where<K extends keyof T>(
         field: K,
         operator: keyof ComparisonOperators<T[K]>,
-        value: T[K] | T[K][],
+        value: T[K] | T[K][] | boolean,
     ): this {
         if(!this.filter[field as keyof Filter<T>]){
             this.filter[field as keyof Filter<T>] = {} as QueryOperators<T[K]>;
@@ -99,21 +99,25 @@ export class QueryBuilder<T extends Document>{
 
         const mongoOperator = mongoOperatorMap[operator] as keyof QueryOperators<T[K]>;
         if (mongoOperator) {
-            // Refine the value based on the operator
-            let refinedValue: any;
-            if (operator === 'in' || operator === 'notIn') {
-                refinedValue = value as T[K][]; // Ensure value is an array for $in and $nin
-            } else if (operator === 'regex'){
-                refinedValue = value as RegExp;
-            }else if(operator === 'text'){
-                refinedValue = { $search: value as string };
-            }
-             else {
-                refinedValue = value as T[K]; // Ensure value is a single value for other operators
-            }
+            // Handle the `exists` operator separately
+            if (operator === 'exists') {
+                (this.filter[field as keyof Filter<T>] as QueryOperators<T[K]>)[mongoOperator] = value as boolean as any;
+            } else {
+                // Handle other operators
+                let refinedValue: any;
+                if (operator === 'in' || operator === 'notIn') {
+                    refinedValue = value as T[K][]; // Ensure value is an array for $in and $nin
+                } else if (operator === 'regex') {
+                    refinedValue = value as RegExp;
+                } else if (operator === 'text') {
+                    refinedValue = { $search: value as string };
+                } else {
+                    refinedValue = value as T[K]; // Ensure value is a single value for other operators
+                }
 
-            // Safely assign the operator and value
-            (this.filter[field as keyof Filter<T>] as QueryOperators<T[K]>)[mongoOperator] = refinedValue;
+                // Safely assign the operator and value
+                (this.filter[field as keyof Filter<T>] as QueryOperators<T[K]>)[mongoOperator] = refinedValue;
+            }
         }
 
         return this;
