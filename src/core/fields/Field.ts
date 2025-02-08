@@ -48,6 +48,16 @@ export class Field<T> {
         return this;
     }
 
+    min(value:number | ((v:T) => number)): this {
+        this.options.min = value;
+        return this;
+    }
+
+    max(value:number | ((v:T) => number)): this {
+        this.options.max = value;
+        return this;
+    }
+
     immutable(condition?: (document:T) => boolean): this {
         this.options.immutable = condition ? condition : true;
         return this;
