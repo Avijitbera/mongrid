@@ -58,6 +58,16 @@ export class Field<T> {
         return this;
     }
 
+    regex(regex:RegExp): this {
+        this.options.regex = regex;
+        return this;
+    }
+
+    description(description: string): this {
+        this.options.description = description;
+        return this;
+    }
+
     immutable(condition?: (document:T) => boolean): this {
         this.options.immutable = condition ? condition : true;
         return this;
