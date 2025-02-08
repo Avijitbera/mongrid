@@ -78,6 +78,16 @@ export class Field<T> {
         return this;
     }
 
+    writeOnce(): this {
+        this.options.writeOnce = true;
+        return this;
+    }
+
+    hidden():this{
+        this.options.hidden = true;
+        return this;
+    }
+
     immutable(condition?: (document:T) => boolean): this {
         this.options.immutable = condition ? condition : true;
         return this;
