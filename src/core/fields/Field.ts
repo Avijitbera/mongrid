@@ -1,3 +1,4 @@
+import { IndexDescription } from "mongodb";
 import { Hook } from "../hooks/Hook";
 import { HookType } from "../hooks/HookType";
 import { CustomType } from "../types/CustomType";
@@ -9,17 +10,43 @@ export class Field<T> {
         index?: boolean;
         required?: boolean;
         type?:any;
-        customType?:CustomType;
-        validators?:Validator<T>[],
-        default?:T,
+        // customType?:CustomType<T>;
+        validators?:Validator<T>[];
+        default?:T;
         hooks?: {[key in HookType]?: Hook<T>[]},
-        alias?:string,
-        transform?: (value:T) => T,
-        immutable?: boolean | ((value:T) => boolean)
+        alias?:string;
+        transform?: (value:T) => T;
+        immutable?: boolean | ((value:T) => boolean),
+        nullable?: boolean;
+        enum?: T[];
+        min?: number | ((v:T) => number);
+        max?: number | ((v:T) => number);
+        regex?:RegExp;
+        description?: string;
+        deprecated?: boolean | string;
+        readOnly?: boolean;
+        writeOnce?: boolean;
+        hidden?: boolean;
+        autoIncrement?: boolean;
+        encrypt?: boolean | ((v:T) => string);
+        indexOptions?:IndexDescription;
+
+
 
     } = {};
 
     constructor(private name: string){}
+
+
+    nullable(): this {
+        this.options.nullable = true;
+        return this;
+    }
+
+    enum(values: T[]): this {
+        this.options.enum = values;
+        return this;
+    }
 
     immutable(condition?: (document:T) => boolean): this {
         this.options.immutable = condition ? condition : true;
@@ -46,10 +73,10 @@ export class Field<T> {
         return this;
     }
 
-    customType(customType: CustomType): this {
-        this.options.customType = customType;
-        return this;
-    }
+    // customType<T>(customType: CustomType<T>): this {
+    //     this.options.customType = customType;
+    //     return this;
+    // }
 
     default(value: T): this {
         this.options.default = value;
