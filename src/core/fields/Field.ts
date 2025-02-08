@@ -68,6 +68,16 @@ export class Field<T> {
         return this;
     }
 
+    deprecated(message?: string): this {
+        this.options.deprecated = message || true;
+        return this;
+    }
+
+    readOnly(): this {
+        this.options.readOnly = true;
+        return this;
+    }
+
     immutable(condition?: (document:T) => boolean): this {
         this.options.immutable = condition ? condition : true;
         return this;
