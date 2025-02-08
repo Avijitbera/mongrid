@@ -88,6 +88,31 @@ export class Field<T> {
         return this;
     }
 
+    /**
+     * Automatically increments the field value for new documents.
+     * @returns The field instance for method chaining.
+     */
+    autoIncrement(): this {
+        this.options.autoIncrement = true;
+        return this;
+    }
+
+    /**
+     * Encrypts the field value before saving it to the database.
+     * @param encryptor Optional encryption function.
+     * @returns The field instance for method chaining.
+     */
+    encrypt(encryptor?: (value: T) => string): this {
+        this.options.encrypt = encryptor || true;
+        return this;
+    }
+
+    indexOptions(indexOptions: IndexDescription): this {
+        this.options.indexOptions = indexOptions;
+        return this;
+    }
+
+
     immutable(condition?: (document:T) => boolean): this {
         this.options.immutable = condition ? condition : true;
         return this;
