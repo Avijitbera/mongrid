@@ -280,6 +280,24 @@ export class Model<T extends Document> {
                 bsonType: this.getBsonType(fieldOptions.type),
             }
 
+             // Add enum validation
+             if (fieldOptions.enum) {
+                validator.$jsonSchema.properties[name].enum = fieldOptions.enum;
+            }
+
+            if (fieldOptions.min !== undefined) {
+                validator.$jsonSchema.properties[name].minimum = fieldOptions.min;
+            }
+            if (fieldOptions.max !== undefined) {
+                validator.$jsonSchema.properties[name].maximum = fieldOptions.max;
+            }
+
+            // Add regex validation
+            if (fieldOptions.regex) {
+                validator.$jsonSchema.properties[name].pattern = fieldOptions.regex.source;
+            }
+
+
             // if(fieldOptions.default !== undefined){
             //     validator.$jsonSchema.properties[name].default = fieldOptions.default
             // }
