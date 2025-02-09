@@ -99,9 +99,35 @@ export class Model<T extends Document> {
         // Check for required fields
         for (const [fieldName, field] of Object.entries(this.fields)) {
             const fieldOptions = field.getOptions();
+            const value = document[fieldName];
             if (fieldOptions.required && document[fieldName] === undefined) {
                 throw new Error(`Missing required field: ${fieldName}`);
             }
+
+            if(value === null && !fieldOptions.nullable){
+                throw new Error(`Field ${fieldName} is required and cannot be null`)
+            }
+
+            if(fieldOptions.enum && !fieldOptions.enum.includes(value)){
+                throw new Error(`Field ${fieldName} must be one of ${fieldOptions.enum.join(', ')}`)
+            }
+
+
+            if(fieldOptions.min !== undefined){
+                const min = typeof fieldOptions.min === "function" ? fieldOptions.min(document) : fieldOptions.min;
+                if(value < min){
+                    throw new Error(`Field ${fieldName} must be greater than ${min}`)
+                }
+            }
+
+            if(fieldOptions.max !== undefined){
+                const max = typeof fieldOptions.max === "function" ? fieldOptions.max(document) : fieldOptions.max;
+                if(value > max){
+                    throw new Error(`Field ${fieldName} must be less than ${max}`)
+                }
+            }
+
+            
         }
 
         // Run all validators
@@ -412,6 +438,8 @@ export class Model<T extends Document> {
         this.relationships[fieldName] = relationshipMetadata;
         return this
     }
+
+    
 
     /**
      * Updates multiple documents in the collection that match the given filter.
