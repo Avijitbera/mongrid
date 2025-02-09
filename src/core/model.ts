@@ -439,7 +439,18 @@ export class Model<T extends Document> {
         return this
     }
 
-    
+    transformDocument(document:T):T{
+        const transformedDocument: any = { ...document };
+        for (const [fieldName, field] of Object.entries(this.fields)){
+            const fieldOptions = field.getOptions();
+            const value = document[fieldName];
+
+            if(fieldOptions.transform){
+                transformedDocument[fieldName] = fieldOptions.transform(value)
+            }
+        }
+        return transformedDocument;
+    }
 
     /**
      * Updates multiple documents in the collection that match the given filter.
