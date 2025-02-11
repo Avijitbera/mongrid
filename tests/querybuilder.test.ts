@@ -1,6 +1,9 @@
+import { ObjectId } from "mongodb";
 import { Database, FieldBuilder, Model } from "../src";
 import { QueryBuilder } from "../src/core/QueryBuilder";
+import { RelationshipMetadata, RelationshipType } from "../src/core/relationships/RelationshipType";
 import { connect } from "./db";
+import { Post } from "./model/post.model";
 
 
 interface User {
@@ -8,6 +11,7 @@ interface User {
     name: string;
     age: number;
     email: string;
+    posts?: Post[]
 }
 
 describe("QueryBuilder Tests", () =>{
@@ -69,6 +73,47 @@ describe("QueryBuilder Tests", () =>{
 
         const results = await queryBuilder.execute();
         expect(results).toHaveLength(1);
+    });
+
+    it("should populate related documents", async () => {
+        // Create a related model (e.g., posts)
+        const postModel = new Model<Post>(db, "posts")
+            .addField("id", new FieldBuilder<string>("id").type(String).required().build())
+            .addField("title", new FieldBuilder<string>("title").type(String).required().build())
+            .addField("userId", new FieldBuilder<string>("userId").type(String).required().build());
+
+        // Define a relationship between users and posts
+        userModel.addRelationship("posts", new RelationshipMetadata(
+            RelationshipType.OneToMany,
+            postModel,
+            "userId"
+        ));
+
+        // Insert test data
+        const userId = await userModel.save({ id: "7", name: "Eve", age: 50, email: "eve@example.com" });
+        await postModel.save({ id: "post1", title: "First Post", userId: new ObjectId(userId) });
+
+        // Query with populated posts
+        const queryBuilder = new QueryBuilder<User>(userModel)
+            .whereId(new ObjectId(userId))
+            .populate("posts");
+
+        const userWithPosts = await queryBuilder.executeOne();
+        expect(userWithPosts).toBeDefined();
+        expect(userWithPosts?.posts).toBeInstanceOf(Array);
+        expect(userWithPosts?.posts).toHaveLength(1);
+        expect(userWithPosts?.posts![0].title).toBe("First Post");
+    });
+
+    it("should count documents", async () => {
+        // Insert test data
+        await userModel.save({ id: "8", name: "Frank", age: 55, email: "frank@example.com" });
+
+        // Query to count documents
+        const queryBuilder = new QueryBuilder<User>(userModel);
+        const count = await queryBuilder.count();
+
+        expect(count).toBeGreaterThanOrEqual(1);
     });
     
 })
