@@ -1,4 +1,5 @@
 import { Database, FieldBuilder, Model } from "../src";
+import { QueryBuilder } from "../src/core/QueryBuilder";
 import { connect } from "./db";
 
 
@@ -23,5 +24,25 @@ describe("QueryBuilder Tests", () =>{
             .addField("age", new FieldBuilder<number>("age").type(Number).build())
             .addField("email", new FieldBuilder<string>("email").type(String).unique().build());
     });
+
+    afterAll(async () => {
+        await userModel.delete({}); // Clean up the collection after tests
+    });
+
+    it("should filter documents using where clause", async () => {
+        // Insert test data
+        await userModel.save({ id: "1", name: "John Doe", age: 30, email: "john@example.com" });
+        await userModel.save({ id: "2", name: "Jane Doe", age: 25, email: "jane@example.com" });
+
+        // Query with filter
+        const queryBuilder = new QueryBuilder<User>(userModel)
+            .where("name", "equal", "John Doe");
+
+        const results = await queryBuilder.execute();
+        expect(results).toHaveLength(1);
+        expect(results[0].name).toBe("John Doe");
+    });
+
+    
     
 })
