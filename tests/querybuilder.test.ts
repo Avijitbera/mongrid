@@ -115,5 +115,35 @@ describe("QueryBuilder Tests", () =>{
 
         expect(count).toBeGreaterThanOrEqual(1);
     });
+
+    it("should explain the query execution plan", async () => {
+        const queryBuilder = new QueryBuilder<User>(userModel)
+            .where("age", "greaterThan", 30);
+
+        const explain = await queryBuilder.explain();
+        expect(explain).toBeDefined();
+        expect(explain.queryPlanner).toBeDefined();
+    });
+
+    it("should execute an aggregation pipeline", async () => {
+        // Insert test data
+        await userModel.save({ id: "9", name: "Grace", age: 60, email: "grace@example.com" });
+
+        // Query with aggregation
+        const queryBuilder = new QueryBuilder<User>(userModel)
+            .aggregate([{ $match: { age: { $gt: 30 } } }]);
+
+        const results = await queryBuilder.execute();
+        expect(results).toHaveLength(1);
+        expect(results[0].name).toBe("Grace");
+    });
+
+    it("should handle non-existent documents gracefully", async () => {
+        const queryBuilder = new QueryBuilder<User>(userModel)
+            .whereId(new ObjectId()); // Non-existent ID
+
+        const result = await queryBuilder.executeOne();
+        expect(result).toBeNull();
+    });
     
 })
