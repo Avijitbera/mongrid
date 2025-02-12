@@ -199,6 +199,46 @@ export class QueryBuilder<T extends Document>{
         }
     }
 
+     /**
+     * Adds a $lookup stage to the aggregation pipeline.
+     * @param from The collection to join.
+     * @param localField The field from the input documents.
+     * @param foreignField The field from the documents of the "from" collection.
+     * @param as The name of the new array field.
+     * @returns The QueryBuilder instance for chaining.
+     */
+     lookup(from: string, localField: string, foreignField: string, as: string): this {
+        this.aggregationPipeline.push({
+            $lookup: {
+                from,
+                localField,
+                foreignField,
+                as,
+            },
+        });
+        return this;
+    }
+
+     /**
+     * Adds a $unwind stage to the aggregation pipeline.
+     * @param path The field path to unwind.
+     * @returns The QueryBuilder instance for chaining.
+     */
+     unwind(path: string): this {
+        this.aggregationPipeline.push({ $unwind: `$${path}` });
+        return this;
+    }
+
+    /**
+     * Adds a $addFields stage to the aggregation pipeline.
+     * @param fields The fields to add.
+     * @returns The QueryBuilder instance for chaining.
+     */
+    addFields(fields: any): this {
+        this.aggregationPipeline.push({ $addFields: fields });
+        return this;
+    }
+
     /**
      * Adds a $project stage to the aggregation pipeline.
      * @param project The projection criteria.
