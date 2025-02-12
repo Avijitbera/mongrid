@@ -200,6 +200,16 @@ export class QueryBuilder<T extends Document>{
     }
 
     /**
+     * Adds a $match stage to the aggregation pipeline.
+     * @param filter The filter to apply.
+     * @returns The QueryBuilder instance for chaining.
+     */
+    match(filter: Filter<T>): this {
+        this.aggregationPipeline.push({ $match: filter });
+        return this;
+    }
+
+    /**
      * Explains the query execution plan.
      * @param verbosity The verbosity level for the explanation.
      * @returns A promise that resolves to the query execution plan.
