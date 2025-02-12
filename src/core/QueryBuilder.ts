@@ -174,9 +174,21 @@ export class QueryBuilder<T extends Document>{
         return this
     }
 
-    aggregate(stage:any):this {
-        this.aggregationPipeline.push(stage);
-        return this;
+    // aggregate(stage:any):this {
+    //     this.aggregationPipeline.push(stage);
+    //     return this;
+    // }
+
+    async aggregate(): Promise<any[]> {
+        try {
+            return this.model.getCollection().aggregate(this.aggregationPipeline).toArray();
+        } catch (error: any) {
+            throw new MongridError(
+                `Aggregation failed: ${error.message}`,
+                ERROR_CODES.AGGREGATION_ERROR,
+                { pipeline: this.aggregationPipeline }
+            );
+        }
     }
 
     paginate(page:number, pageSize:number):this{
@@ -236,6 +248,16 @@ export class QueryBuilder<T extends Document>{
      */
     addFields(fields: any): this {
         this.aggregationPipeline.push({ $addFields: fields });
+        return this;
+    }
+
+    /**
+     * Adds a $replaceRoot stage to the aggregation pipeline.
+     * @param newRoot The new root document.
+     * @returns The QueryBuilder instance for chaining.
+     */
+    replaceRoot(newRoot: any): this {
+        this.aggregationPipeline.push({ $replaceRoot: { newRoot } });
         return this;
     }
 

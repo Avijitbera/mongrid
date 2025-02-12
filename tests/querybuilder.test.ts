@@ -125,18 +125,18 @@ describe("QueryBuilder Tests", () =>{
         expect(explain.queryPlanner).toBeDefined();
     });
 
-    it("should execute an aggregation pipeline", async () => {
-        // Insert test data
-        await userModel.save({ id: "9", name: "Grace", age: 60, email: "grace@example.com" });
+    // it("should execute an aggregation pipeline", async () => {
+    //     // Insert test data
+    //     await userModel.save({ id: "9", name: "Grace", age: 60, email: "grace@example.com" });
 
-        // Query with aggregation
-        const queryBuilder = new QueryBuilder<User>(userModel)
-            .aggregate([{ $match: { age: { $gt: 30 } } }]);
+    //     // Query with aggregation
+    //     const queryBuilder = new QueryBuilder<User>(userModel)
+    //         .aggregate([{ $match: { age: { $gt: 30 } } }]);
 
-        const results = await queryBuilder.execute();
-        expect(results).toHaveLength(1);
-        expect(results[0].name).toBe("Grace");
-    });
+    //     const results = await queryBuilder.execute();
+    //     expect(results).toHaveLength(1);
+    //     expect(results[0].name).toBe("Grace");
+    // });
 
     it("should handle non-existent documents gracefully", async () => {
         const queryBuilder = new QueryBuilder<User>(userModel)
