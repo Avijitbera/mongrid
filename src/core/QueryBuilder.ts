@@ -200,6 +200,26 @@ export class QueryBuilder<T extends Document>{
     }
 
     /**
+     * Adds a $project stage to the aggregation pipeline.
+     * @param project The projection criteria.
+     * @returns The QueryBuilder instance for chaining.
+     */
+    project(project: any): this {
+        this.aggregationPipeline.push({ $project: project });
+        return this;
+    }
+
+    /**
+     * Adds a $group stage to the aggregation pipeline.
+     * @param group The grouping criteria.
+     * @returns The QueryBuilder instance for chaining.
+     */
+    group(group: any): this {
+        this.aggregationPipeline.push({ $group: group });
+        return this;
+    }
+
+    /**
      * Adds a $match stage to the aggregation pipeline.
      * @param filter The filter to apply.
      * @returns The QueryBuilder instance for chaining.
