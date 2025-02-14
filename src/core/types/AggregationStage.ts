@@ -21,3 +21,34 @@ interface ProjectStage<T> {
     }
 }
 
+interface LookupStage<T> {
+    $lookup: {
+        from: string;
+        localField:string;
+        foreignField:string;
+        as:string;
+    }
+}
+
+interface UnwindStage<T> {
+    $unwind: string;
+}
+
+interface AddFieldsStage<T> {
+    $addFields: {
+        [key: string]: any;
+    }
+}
+
+interface ReplaceRootStage<T> {
+    $replaceRoot: {
+        newRoot: string | any;
+    }
+}
+
+interface FacetStage<T> {
+    $facet:{
+        [key: string]: any
+    }
+}
+
