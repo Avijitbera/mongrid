@@ -52,3 +52,25 @@ interface FacetStage<T> {
     }
 }
 
+interface BucketStage<T> {
+    $bucket: {
+        groupBy: any;
+        boundaries: any[];
+        default: any;
+        output: any;
+    }
+}
+
+interface GraphLookupStage<T> {
+    $graphLookup: {
+        from: string;
+        startWith: any;
+        connectFromField: string;
+        connectToField: string;
+        as: string;
+        maxDepth?: number;
+        depthField?: string;
+    };
+}
+
+
