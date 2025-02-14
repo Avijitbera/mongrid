@@ -73,4 +73,30 @@ interface GraphLookupStage<T> {
     };
 }
 
+interface MergeStage<T> {
+    $merge: {
+        into: string;
+        whenMatched?: "merge" | "replace" | "keepExisting" | "fail";
+        whenNotMatched?: "insert" | "discard" | "fail";
+    };
+}
+
+interface RedactStage<T> {
+    $redact: any;
+}
+
+export type AggregationStage<T> =
+    | MatchStage<T>
+    | GroupStage<T>
+    | SortStage<T>
+    | ProjectStage<T>
+    | LookupStage<T>
+    | UnwindStage<T>
+    | AddFieldsStage<T>
+    | ReplaceRootStage<T>
+    | FacetStage<T>
+    | BucketStage<T>
+    | GraphLookupStage<T>
+    | MergeStage<T>
+    | RedactStage<T>;
 
