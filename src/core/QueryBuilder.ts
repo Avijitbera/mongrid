@@ -3,7 +3,7 @@ import { Model } from "./model";
 import { equal, notEqual } from "assert";
 import { ERROR_CODES, MongridError } from "../error/MongridError";
 import { Plugin } from "./plugin/plugin";
-import { AggregationStage, GroupStage } from "./types/AggregationStage";
+import { AddFieldsStage, AggregationStage, FacetStage, GroupStage, ProjectStage, ReplaceRootStage } from "./types/AggregationStage";
 
 
 type ComparisonOperators<T> = {
@@ -175,6 +175,8 @@ export class QueryBuilder<T extends Document>{
         return this
     }
 
+    
+
     // aggregate(stage:any):this {
     //     this.aggregationPipeline.push(stage);
     //     return this;
@@ -247,7 +249,7 @@ export class QueryBuilder<T extends Document>{
      * @param fields The fields to add.
      * @returns The QueryBuilder instance for chaining.
      */
-    addFields(fields: any): this {
+    addFields(fields: AddFieldsStage<T>["$addFields"]): this {
         this.aggregationPipeline.push({ $addFields: fields });
         return this;
     }
@@ -257,8 +259,18 @@ export class QueryBuilder<T extends Document>{
      * @param newRoot The new root document.
      * @returns The QueryBuilder instance for chaining.
      */
-    replaceRoot(newRoot: any): this {
+    replaceRoot(newRoot: ReplaceRootStage<T>["$replaceRoot"]["newRoot"]): this {
         this.aggregationPipeline.push({ $replaceRoot: { newRoot } });
+        return this;
+    }
+
+    /**
+     * Adds a $facet stage to the aggregation pipeline.
+     * @param facets The facets to create.
+     * @returns The QueryBuilder instance for chaining.
+     */
+    facet(facets: FacetStage<T>["$facet"]): this {
+        this.aggregationPipeline.push({ $facet: facets });
         return this;
     }
 
@@ -267,7 +279,7 @@ export class QueryBuilder<T extends Document>{
      * @param project The projection criteria.
      * @returns The QueryBuilder instance for chaining.
      */
-    project(project: any): this {
+    project(project: ProjectStage<T>["$project"]): this {
         this.aggregationPipeline.push({ $project: project });
         return this;
     }
