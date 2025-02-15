@@ -3,6 +3,7 @@ import { Model } from "./model";
 import { equal, notEqual } from "assert";
 import { ERROR_CODES, MongridError } from "../error/MongridError";
 import { Plugin } from "./plugin/plugin";
+import { AggregationStage, GroupStage } from "./types/AggregationStage";
 
 
 type ComparisonOperators<T> = {
@@ -37,7 +38,7 @@ export class QueryBuilder<T extends Document>{
     private session: ClientSession | null = null;
     private sort: Sort = {};
     private projection: { [key: string]: 1 | 0 } = {};
-    private aggregationPipeline: any[] = [];
+    private aggregationPipeline: AggregationStage<T>[] = [];
     private page: number = 1; // Pagination page number
     private pageSize: number = 10; // Pagination page size
     private plugins: Plugin<T>[] = [];
@@ -276,7 +277,7 @@ export class QueryBuilder<T extends Document>{
      * @param group The grouping criteria.
      * @returns The QueryBuilder instance for chaining.
      */
-    group(group: any): this {
+    group(group: GroupStage<T>["$group"]): this {
         this.aggregationPipeline.push({ $group: group });
         return this;
     }

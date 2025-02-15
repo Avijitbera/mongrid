@@ -1,27 +1,27 @@
 import { Filter, Sort } from "mongodb";
 
-interface MatchStage<T> {
+export interface MatchStage<T> {
     $match: Filter<T>
 }
 
-interface GroupStage<T> {
+export interface GroupStage<T> {
     $group:{
         _id:any;
         [key: string]:any;
     }
 }
 
-interface SortStage<T> {
+export interface SortStage<T> {
     $sort: Sort
 }
 
-interface ProjectStage<T> {
+export interface ProjectStage<T> {
     $project: {
         [key: string]: 1 | 0 | any;
     }
 }
 
-interface LookupStage<T> {
+export interface LookupStage<T> {
     $lookup: {
         from: string;
         localField:string;
@@ -30,29 +30,29 @@ interface LookupStage<T> {
     }
 }
 
-interface UnwindStage<T> {
+export interface UnwindStage<T> {
     $unwind: string;
 }
 
-interface AddFieldsStage<T> {
+export interface AddFieldsStage<T> {
     $addFields: {
         [key: string]: any;
     }
 }
 
-interface ReplaceRootStage<T> {
+export interface ReplaceRootStage<T> {
     $replaceRoot: {
         newRoot: string | any;
     }
 }
 
-interface FacetStage<T> {
+export interface FacetStage<T> {
     $facet:{
         [key: string]: any
     }
 }
 
-interface BucketStage<T> {
+export interface BucketStage<T> {
     $bucket: {
         groupBy: any;
         boundaries: any[];
@@ -61,7 +61,7 @@ interface BucketStage<T> {
     }
 }
 
-interface GraphLookupStage<T> {
+export interface GraphLookupStage<T> {
     $graphLookup: {
         from: string;
         startWith: any;
@@ -73,7 +73,7 @@ interface GraphLookupStage<T> {
     };
 }
 
-interface MergeStage<T> {
+export interface MergeStage<T> {
     $merge: {
         into: string;
         whenMatched?: "merge" | "replace" | "keepExisting" | "fail";
@@ -81,7 +81,7 @@ interface MergeStage<T> {
     };
 }
 
-interface RedactStage<T> {
+export interface RedactStage<T> {
     $redact: any;
 }
 
