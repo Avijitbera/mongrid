@@ -3,7 +3,7 @@ import { Model } from "./model";
 import { equal, notEqual } from "assert";
 import { ERROR_CODES, MongridError } from "../error/MongridError";
 import { Plugin } from "./plugin/plugin";
-import { AddFieldsStage, AggregationStage, FacetStage, GroupStage, ProjectStage, ReplaceRootStage } from "./types/AggregationStage";
+import { AddFieldsStage, AggregationStage, BucketStage, FacetStage, GraphLookupStage, GroupStage, ProjectStage, ReplaceRootStage } from "./types/AggregationStage";
 
 
 type ComparisonOperators<T> = {
@@ -255,12 +255,32 @@ export class QueryBuilder<T extends Document>{
     }
 
     /**
+     * Adds a $graphLookup stage to the aggregation pipeline.
+     * @param graphLookup The graph lookup configuration.
+     * @returns The QueryBuilder instance for chaining.
+     */
+    graphLookup(graphLookup: GraphLookupStage<T>["$graphLookup"]): this {
+        this.aggregationPipeline.push({ $graphLookup: graphLookup });
+        return this;
+    }
+
+    /**
      * Adds a $replaceRoot stage to the aggregation pipeline.
      * @param newRoot The new root document.
      * @returns The QueryBuilder instance for chaining.
      */
     replaceRoot(newRoot: ReplaceRootStage<T>["$replaceRoot"]["newRoot"]): this {
         this.aggregationPipeline.push({ $replaceRoot: { newRoot } });
+        return this;
+    }
+
+    /**
+     * Adds a $bucket stage to the aggregation pipeline.
+     * @param bucket The bucket configuration.
+     * @returns The QueryBuilder instance for chaining.
+     */
+    bucket(bucket: BucketStage<T>["$bucket"]): this {
+        this.aggregationPipeline.push({ $bucket: bucket });
         return this;
     }
 
