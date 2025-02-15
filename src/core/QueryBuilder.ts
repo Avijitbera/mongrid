@@ -3,7 +3,7 @@ import { Model } from "./model";
 import { equal, notEqual } from "assert";
 import { ERROR_CODES, MongridError } from "../error/MongridError";
 import { Plugin } from "./plugin/plugin";
-import { AddFieldsStage, AggregationStage, BucketStage, FacetStage, GraphLookupStage, GroupStage, ProjectStage, ReplaceRootStage } from "./types/AggregationStage";
+import { AddFieldsStage, AggregationStage, BucketStage, FacetStage, GraphLookupStage, GroupStage, MergeStage, ProjectStage, RedactStage, ReplaceRootStage } from "./types/AggregationStage";
 
 
 type ComparisonOperators<T> = {
@@ -251,6 +251,26 @@ export class QueryBuilder<T extends Document>{
      */
     addFields(fields: AddFieldsStage<T>["$addFields"]): this {
         this.aggregationPipeline.push({ $addFields: fields });
+        return this;
+    }
+
+    /**
+     * Adds a $redact stage to the aggregation pipeline.
+     * @param redact The redact configuration.
+     * @returns The QueryBuilder instance for chaining.
+     */
+    redact(redact: RedactStage<T>["$redact"]): this {
+        this.aggregationPipeline.push({ $redact: redact });
+        return this;
+    }
+
+    /**
+     * Adds a $merge stage to the aggregation pipeline.
+     * @param merge The merge configuration.
+     * @returns The QueryBuilder instance for chaining.
+     */
+    merge(merge: MergeStage<T>["$merge"]): this {
+        this.aggregationPipeline.push({ $merge: merge });
         return this;
     }
 
