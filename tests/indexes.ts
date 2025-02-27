@@ -18,7 +18,7 @@ describe('Indexes Tests', () => {
         const mongodb = await connect();
         db = new Database(mongodb);
 
-        productModel = new Model<Product>(db, "products1")
+        productModel = new Model<Product>(db, "products3")
             .addField("id", new FieldBuilder<string>("id").type(String).required().build())
             .addField("sku", new FieldBuilder<string>("sku").type(String).unique().build())
             .addField("name", new FieldBuilder<string>("name").type(String).index().build());
@@ -42,6 +42,7 @@ describe('Indexes Tests', () => {
 
     it('should create an index on the name field', async () => {
         const indexes = await productModel.getCollection().indexInformation();
-        expect(indexes).toContainEqual(expect.objectContaining({ name: 1 }));
+        // expect(indexes).toContainEqual(expect.objectContaining({ name: 1 }));
+        expect(indexes).toHaveProperty("name_1", [["name", 1]]);
     });
 })

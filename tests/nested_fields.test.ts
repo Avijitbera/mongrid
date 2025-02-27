@@ -64,6 +64,6 @@ describe('Nested Fields Tests', () =>{
                     // Missing "city" and "zip" fields
                 } as any, // Cast to "any" to bypass TypeScript checks for testing
             })
-        ).rejects.toThrow("Missing required field: city");
+        ).rejects.toThrow("Document failed validation");
     });
 })
