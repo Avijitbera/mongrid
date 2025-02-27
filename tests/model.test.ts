@@ -17,7 +17,7 @@ describe('Model - Save and Get', () =>{
         const mongodb = await connect()
         db = new Database(mongodb)
 
-        userModel = new Model<User>(db, "users")
+        userModel = new Model<User>(db, "users1")
             .addField("id", new FieldBuilder<string>("id").type(String).required().build())
             .addField("name", new FieldBuilder<string>("name").type(String).required().build())
             .addField("age", new FieldBuilder<number>("age").type(Number).build());

@@ -1,7 +1,8 @@
 
 import { FieldBuilder, Model } from '../src';
 import { Database } from '../src/core/Database';
-import {User} from '../tests/model/user.model'
+import { QueryBuilder } from '../src/core/QueryBuilder';
+import {User} from './model/user.model'
 import { connect } from './db';
 
 
@@ -18,4 +19,21 @@ describe("Type-Safe Aggregation Tests", () => {
             .addField("name", new FieldBuilder<string>("name").type(String).required().build())
             .addField("age", new FieldBuilder<number>("age").type(Number).build());
     });
+
+    afterAll(async () => {
+        // await cleanup();
+    });
+
+    it("should perform type-safe aggregation", async () => {
+        await userModel.save({ id: "1", name: "John",  });
+        await userModel.save({ id: "2", name: "Jane",  });
+        await userModel.save({ id: "3", name: "Alice",  });
+
+        const queryBuilder = new QueryBuilder<User>(userModel)
+        .group({
+            _id:"$age",
+            count:{$sum:1}
+        })
+        .sortBy({count: -1})
+    })
 })

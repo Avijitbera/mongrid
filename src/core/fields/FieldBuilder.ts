@@ -30,10 +30,10 @@ export class FieldBuilder<T> {
         return this;
     }
 
-    customType(customType: CustomType): this {
-        this.field.customType(customType);
-        return this;
-    }
+    // customType(customType: CustomType): this {
+    //     this.field.customType(customType);
+    //     return this;
+    // }
 
     default(value: T): this {
         this.field.default(value);

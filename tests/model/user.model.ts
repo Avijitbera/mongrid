@@ -4,11 +4,13 @@ import { Post } from "./post.model";
 export interface User {
     id:string;
     name: string;
-    posts?: Post[]
+    posts?: Post[];
+    age?:number;
 }
 
 export function createUserModel(db: Database): Model<User> {
     return new Model<User>(db, "users")
         .addField("id", new FieldBuilder<string>("id").type(String).required().build())
-        .addField("name", new FieldBuilder<string>("name").type(String).required().build());
+        .addField("name", new FieldBuilder<string>("name").type(String).required().build())
+        .addField('age', new FieldBuilder<number>('age').type(Number).build());
 }

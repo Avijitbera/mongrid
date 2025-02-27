@@ -36,8 +36,9 @@ describe('Hooks Tests', () => {
 
         // Add a post-save hook to update the order status
         orderModel.addHook(HookType.PostSave, {
-            execute: async (document: Order) => {
+            execute: async (document: Order & { _id: string }) => {
                 document.status = "completed";
+                await orderModel.updateById(new ObjectId(document._id), { status: "completed" });
             }
         });
     });
