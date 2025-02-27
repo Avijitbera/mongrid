@@ -22,7 +22,7 @@ describe("QueryBuilder Tests", () =>{
         const mongodb = await connect();
         db = new Database(mongodb);
 
-        userModel = new Model<User>(db, "users")
+        userModel = new Model<User>(db, "users10")
             .addField("id", new FieldBuilder<string>("id").type(String).required().build())
             .addField("name", new FieldBuilder<string>("name").type(String).required().build())
             .addField("age", new FieldBuilder<number>("age").type(Number).build())
@@ -54,6 +54,7 @@ describe("QueryBuilder Tests", () =>{
 
         // Query with sorting
         const queryBuilder = new QueryBuilder<User>(userModel)
+        .where("name", "in", ["Alice", "Bob"])
             .sortBy({ age: 1 }); // Sort by age in ascending order
 
         const results = await queryBuilder.execute();
@@ -77,7 +78,7 @@ describe("QueryBuilder Tests", () =>{
 
     it("should populate related documents", async () => {
         // Create a related model (e.g., posts)
-        const postModel = new Model<Post>(db, "posts")
+        const postModel = new Model<Post>(db, "posts10")
             .addField("id", new FieldBuilder<string>("id").type(String).required().build())
             .addField("title", new FieldBuilder<string>("title").type(String).required().build())
             .addField("userId", new FieldBuilder<string>("userId").type(String).required().build());
