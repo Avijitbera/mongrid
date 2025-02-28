@@ -195,10 +195,11 @@ export class QueryBuilder<T extends Document>{
     }
 
     paginate(page:number, pageSize:number):this{
-        this.page = page;
-        this.pageSize = pageSize;
-        this.options.skip = (page - 1) * pageSize;
-        this.options.limit = pageSize;
+        const skip = (page - 1) * pageSize; // Calculate the number of documents to skip
+        this.options.skip = skip; // Apply skip
+        this.options.limit = pageSize; // Apply limit
+    
+        console.log("Paginate - Skip:", skip, "Limit:", pageSize); // Debugging
         return this;
     }
 
@@ -370,7 +371,8 @@ export class QueryBuilder<T extends Document>{
                 return this.model.getCollection().aggregate<T>(this.aggregationPipeline, { session: this.session! }).toArray();
             } else {
                 // Use find query with filter, options, and populated fields
-                return this.model.find(this.filter, { ...this.options, sort: this.sort, projection: this.projection, session: this.session! }, this.populatedFields);
+                return this.model.find(this.filter,
+                     { ...this.options, sort: this.sort, projection: this.projection, session: this.session! }, this.populatedFields);
             }
         } catch (error:any) {
             throw new MongridError(

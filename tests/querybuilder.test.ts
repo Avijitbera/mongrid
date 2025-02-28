@@ -64,16 +64,21 @@ describe("QueryBuilder Tests", () =>{
     });
 
     it("should paginate documents", async () => {
+        // Clear the collection before inserting test data
+        await userModel.delete({});
+    
         // Insert test data
         await userModel.save({ id: "5", name: "Charlie", age: 40, email: "charlie@example.com" });
-        await userModel.save({ id: "6", name: "David", age: 45, email: "david@example.com" });
+    await userModel.save({ id: "6", name: "David", age: 45, email: "david@example.com" });
 
-        // Query with pagination
-        const queryBuilder = new QueryBuilder<User>(userModel)
-            .paginate(1, 1); // Page 1, 1 document per page
+    // Query with pagination
+    const queryBuilder = new QueryBuilder<User>(userModel)
+        .paginate(1, 1); // Page 1, 1 document per page
 
-        const results = await queryBuilder.execute();
-        expect(results).toHaveLength(1);
+    const results = await queryBuilder.execute();
+
+    // Assertions
+    expect(results).toHaveLength(1);// Ensure only 1 document is returned
     });
 
     it("should populate related documents", async () => {
