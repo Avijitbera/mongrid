@@ -152,11 +152,13 @@ export class QueryBuilder<T extends Document>{
 
     limit(limit:number): this {
         this.options.limit = limit;
+       
         return this;
     }
 
     skip(skip:number):this {
         this.options.skip = skip;
+        
         return this
     }
 

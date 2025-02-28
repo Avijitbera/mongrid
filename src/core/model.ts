@@ -352,6 +352,15 @@ export class Model<T extends Document> {
     ): Promise<T[]>{
         const aggregationPipeline: any[] = [{ $match: filter }];
 
+        if(options.skip !== undefined){
+            aggregationPipeline.push({
+                $skip: options.skip
+            })
+        }
+        if (options.limit !== undefined) {
+            aggregationPipeline.push({ $limit: options.limit });
+        }
+
         for (const fieldName of populatedFields){
             const relationship = this.relationships[fieldName as string];
             if(relationship){

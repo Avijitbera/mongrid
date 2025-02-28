@@ -73,7 +73,8 @@ describe("QueryBuilder Tests", () =>{
 
     // Query with pagination
     const queryBuilder = new QueryBuilder<User>(userModel)
-        .paginate(1, 1); // Page 1, 1 document per page
+    .paginate(1,1)
+         // Page 1, 1 document per page
 
     const results = await queryBuilder.execute();
 
