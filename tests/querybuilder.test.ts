@@ -85,27 +85,43 @@ describe("QueryBuilder Tests", () =>{
     it("should populate related documents", async () => {
         // Create a related model (e.g., posts)
         const postModel = new Model<Post>(db, "posts10")
-            .addField("id", new FieldBuilder<string>("id").type(String).required().build())
-            .addField("title", new FieldBuilder<string>("title").type(String).required().build())
-            .addField("userId", new FieldBuilder<string>("userId").type(String).required().build());
+        .addField("id", new FieldBuilder<string>("id").type(String).required().build())
+        .addField("title", new FieldBuilder<string>("title").type(String).required().build())
+        .addField("userId", new FieldBuilder<ObjectId>("userId").type(ObjectId).required().build());
 
-        // Define a relationship between users and posts
-        userModel.addRelationship("posts", new RelationshipMetadata(
-            RelationshipType.OneToMany,
-            postModel,
-            "userId"
-        ));
+    // Define a relationship between users and posts
+    userModel.addRelationship("posts", new RelationshipMetadata(
+        RelationshipType.OneToMany,
+        postModel,
+        "userId" // Foreign key in the Post model
+    ));
 
         // Insert test data
-        const userId = await userModel.save({ id: "7", name: "Eve", age: 50, email: "eve@example.com" });
-        await postModel.save({ id: "post1", title: "First Post", userId: new ObjectId(userId) });
+        const userDocument = {
+            id: "7",
+            name: "Eve",
+            age: 50,
+            email: "eve@example.com",
+        };
+        console.log("Saving user:", userDocument);
+        const userId = await userModel.save(userDocument);
 
+        const postDocument = {
+            id: "post1",
+            title: "First Post",
+            userId: new ObjectId(userId), // Ensure userId is an ObjectId
+        };
+        console.log("Saving post:", postDocument);
+        await postModel.save(postDocument);
+    
         // Query with populated posts
         const queryBuilder = new QueryBuilder<User>(userModel)
             .whereId(new ObjectId(userId))
             .populate("posts");
-
+    
         const userWithPosts = await queryBuilder.executeOne();
+
+   
         expect(userWithPosts).toBeDefined();
         expect(userWithPosts?.posts).toBeInstanceOf(Array);
         expect(userWithPosts?.posts).toHaveLength(1);
