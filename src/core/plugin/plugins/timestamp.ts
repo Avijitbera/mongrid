@@ -14,8 +14,15 @@ export class TimestampPlugin<T extends TimestampedDocument>{
                 if(!data.createdAt){
                     data.createdAt = new Date();
                 }
+                data.updatedAt = new Date();
             },
-        })
+        });
+
+        model.addHook(HookType.PreUpdate, {
+            execute:async(data:T) => {
+                data.updatedAt = new Date();
+            },
+        });
     }
 }
 
