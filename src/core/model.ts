@@ -432,8 +432,19 @@ export class Model<T extends Document> {
      * @param options Optional options to pass to the update method.
      * @returns The result of the update operation.
      */
-    async updateById(id: ObjectId, data: Partial<T>, options?: {session?: ClientSession}): Promise<UpdateResult<T>>{
-        return await this.collection.updateOne({_id: id} as Filter<T>, {$set: data}, {session: options?.session});
+    async updateById(id: ObjectId, data: Partial<T>, options?: { session?: ClientSession }): Promise<UpdateResult<T>> {
+        // Execute pre-update hooks
+        const document = await this.findById(id);
+        if (document) {
+            await this.executeHooks(HookType.PreUpdate, document);
+        }
+    
+        // Perform the update operation
+        return await this.collection.updateOne(
+            { _id: id } as Filter<T>,
+            { $set: { ...data, updatedAt: new Date() } }, // Ensure updatedAt is set
+            { session: options?.session }
+        );
     }
 
     

@@ -201,7 +201,7 @@ export class QueryBuilder<T extends Document>{
         this.options.skip = skip; // Apply skip
         this.options.limit = pageSize; // Apply limit
     
-        console.log("Paginate - Skip:", skip, "Limit:", pageSize); // Debugging
+        
         return this;
     }
 

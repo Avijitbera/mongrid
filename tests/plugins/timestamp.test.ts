@@ -18,7 +18,7 @@ describe("Timestamp Plugin Tests", () => {
         const mongodb = await connect();
         db = new Database(mongodb);
 
-        userModel = new Model<User>(db, "users")
+        userModel = new Model<User>(db, "users1")
         .addField("id", new FieldBuilder<string>("id").type(String).required().build())
         .addField("name", new FieldBuilder<string>("name").type(String).required().build());
 
@@ -47,28 +47,33 @@ describe("Timestamp Plugin Tests", () => {
         expect(user?.updatedAt).toBeInstanceOf(Date); 
     })
 
-    it("should update the updatedAt field when updating a document", async() =>{
+    it("should update the updatedAt field when updating a document", async () => {
+        // Save a user
         const userId = await userModel.save({
             id: "2",
             name: "Jane Doe",
         });
-
+    
         // Retrieve the user
         const user = await userModel.findById(new ObjectId(userId));
         expect(user).toBeDefined();
-
+       
+    
         // Wait for a short time to ensure the updatedAt timestamp changes
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 500));
+    
+        // Update the user
         await userModel.updateById(new ObjectId(userId), { name: "Jane Smith" });
-
+    
         // Retrieve the updated user
         const updatedUser = await userModel.findById(new ObjectId(userId));
-
+        
+    
         // Assertions
         expect(updatedUser).toBeDefined();
         expect(updatedUser?.updatedAt).toBeInstanceOf(Date); // Ensure updatedAt is set
-        expect(updatedUser?.updatedAt).not.toEqual(user?.updatedAt);
-    })
+        expect(updatedUser?.updatedAt).not.toEqual(user?.updatedAt); // Ensure updatedAt has changed
+    });
 
 
 })

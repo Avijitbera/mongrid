@@ -20,7 +20,8 @@ export class TimestampPlugin<T extends TimestampedDocument>{
 
         model.addHook(HookType.PreUpdate, {
             execute:async(data:T) => {
-                data.updatedAt = new Date();
+                
+                (data as any).$set = { updatedAt: new Date() };
             },
         });
     }
