@@ -5,20 +5,27 @@ export interface MatchStage<T> {
 }
 
 export interface GroupStage<T> {
-    $group:{
-        _id:any;
-        [key: string]:any;
-    }
+    $group: {
+        _id: any;
+        [key: string]: {
+            $sum?: number | string;
+            $avg?: number | string;
+            $min?: number | string;
+            $max?: number | string;
+            $push?: any;
+            $addToSet?: any;
+        };
+    };
 }
 
 export interface SortStage<T> {
     $sort: Sort
 }
 
-export interface ProjectStage<T> {
+interface ProjectStage<T> {
     $project: {
-        [key: string]: 1 | 0 | any;
-    }
+        [key in keyof T]?: 1 | 0 | { $substr?: [string, number, number] };
+    };
 }
 
 export interface LookupStage<T> {
@@ -44,6 +51,10 @@ export interface ReplaceRootStage<T> {
     $replaceRoot: {
         newRoot: string | any;
     }
+}
+
+export interface CountStage<T> {
+    $count: string;
 }
 
 export interface FacetStage<T> {
@@ -84,7 +95,13 @@ export interface MergeStage<T> {
 export interface RedactStage<T> {
     $redact: any;
 }
+export interface LimitStage<T> {
+    $limit: number;
+}
 
+export interface SkipStage<T> {
+    $skip: number;
+}
 export type AggregationStage<T> =
     | MatchStage<T>
     | GroupStage<T>
@@ -98,5 +115,8 @@ export type AggregationStage<T> =
     | BucketStage<T>
     | GraphLookupStage<T>
     | MergeStage<T>
-    | RedactStage<T>;
+    | RedactStage<T>
+    | CountStage<T>
+    | LimitStage<T>
+    | SkipStage<T>;;
 

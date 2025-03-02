@@ -177,6 +177,20 @@ export class QueryBuilder<T extends Document>{
         return this
     }
 
+    /**
+     * Validates the aggregation pipeline before execution.
+     * @throws {MongridError} If the pipeline is empty or invalid.
+     */
+    private validatePipeline(): void {
+        if (this.aggregationPipeline.length === 0) {
+            throw new MongridError(
+                "Aggregation pipeline is empty",
+                ERROR_CODES.AGGREGATION_ERROR,
+                { pipeline: this.aggregationPipeline }
+            );
+        }
+    }
+
     
 
     // aggregate(stage:any):this {
@@ -186,6 +200,7 @@ export class QueryBuilder<T extends Document>{
 
     async aggregate(): Promise<any[]> {
         try {
+            this.validatePipeline();
             return this.model.getCollection().aggregate(this.aggregationPipeline).toArray();
         } catch (error: any) {
             throw new MongridError(
@@ -195,6 +210,43 @@ export class QueryBuilder<T extends Document>{
             );
         }
     }
+
+    /**
+     * Adds a $count stage to the aggregation pipeline.
+     * @param fieldName The name of the field to store the count.
+     * @returns The QueryBuilder instance for chaining.
+     * @example
+     * queryBuilder.countAgg("totalOrders");
+     */
+    countAgg(fieldName: string): this {
+        this.aggregationPipeline.push({ $count: fieldName });
+        return this;
+    }
+
+    /**
+     * Adds a $limit stage to the aggregation pipeline.
+     * @param limit The maximum number of documents to pass to the next stage.
+     * @returns The QueryBuilder instance for chaining.
+     * @example
+     * queryBuilder.limitAgg(10);
+     */
+    limitAgg(limit: number): this {
+        this.aggregationPipeline.push({ $limit: limit });
+        return this;
+    }
+
+    /**
+     * Adds a $skip stage to the aggregation pipeline.
+     * @param skip The number of documents to skip.
+     * @returns The QueryBuilder instance for chaining.
+     * @example
+     * queryBuilder.skipAgg(5);
+     */
+    skipAgg(skip: number): this {
+        this.aggregationPipeline.push({ $skip: skip });
+        return this;
+    }
+
 
     paginate(page:number, pageSize:number):this{
         const skip = (page - 1) * pageSize; // Calculate the number of documents to skip
