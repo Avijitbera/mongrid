@@ -1,5 +1,5 @@
 import { Document, Filter } from "mongodb";
-import { AddFieldsStage, AggregationStage, CountStage, FacetStage, GroupStage, LimitStage, LookupStage, MatchStage, ProjectStage, ReplaceRootStage, SkipStage, SortStage, UnwindStage } from "./AggregationStage";
+import { AddFieldsStage, AggregationStage, BucketStage, CountStage, FacetStage, GraphLookupStage, GroupStage, LimitStage, LookupStage, MatchStage, ProjectStage, ReplaceRootStage, SkipStage, SortStage, UnwindStage } from "./AggregationStage";
 import { Model } from "../model";
 import { ERROR_CODES, MongridError } from "../../error/MongridError";
 
@@ -141,6 +141,30 @@ export class AggregationBuilder<T extends Document>{
         this.aggregationPipeline.push(facetStage);
         return this;
     }
+
+    /**
+     * Adds a $bucket stage to the aggregation pipeline.
+     * @param bucket The bucket configuration.
+     * @returns The AggregationBuilder instance for chaining.
+     */
+    bucket(bucket: BucketStage<T>['$bucket']): this {
+        const bucketStage: BucketStage<T> = { $bucket: bucket };
+        this.aggregationPipeline.push(bucketStage);
+        return this;
+    }
+
+
+    /**
+     * Adds a $graphLookup stage to the aggregation pipeline.
+     * @param graphLookup The graph lookup configuration.
+     * @returns The AggregationBuilder instance for chaining.
+     */
+    graphLookup(graphLookup: GraphLookupStage<T>['$graphLookup']): this {
+        const graphLookupStage: GraphLookupStage<T> = { $graphLookup: graphLookup };
+        this.aggregationPipeline.push(graphLookupStage);
+        return this;
+    }
+    
 
      /**
      * Executes the aggregation pipeline.
