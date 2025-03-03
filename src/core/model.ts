@@ -9,6 +9,7 @@ import { NestedField } from './fields/NestedField';
 import { RelationshipMetadata, RelationshipType } from './relationships/RelationshipType';
 import { Plugin } from './plugin/plugin';
 import {ERROR_CODES, MongridError} from '../error/MongridError'
+import { AggregationBuilder } from './aggregation/AggregationBuilder';
 
 export class Model<T extends Document> {
     private collection: Collection<T>;
@@ -43,6 +44,16 @@ export class Model<T extends Document> {
     constructor(private db: Database, collectionName: string) {
         this.collection = db.getCollection<T>(collectionName);
     }
+
+    /**
+     * Returns an instance of AggregationBuilder for building aggregation pipelines.
+     * @returns An instance of AggregationBuilder.
+     */
+
+    aggregate(): AggregationBuilder<T> {
+        return new AggregationBuilder<T>(this);
+    }
+    
     /**
      * Add a hook to be executed when a certain event occurs.
      * @param type The event type (e.g. preSave, postSave, preUpdate, postUpdate, preRemove, postRemove)

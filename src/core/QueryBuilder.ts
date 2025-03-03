@@ -4,6 +4,7 @@ import { equal, notEqual } from "assert";
 import { ERROR_CODES, MongridError } from "../error/MongridError";
 import { Plugin } from "./plugin/plugin";
 import { AddFieldsStage, AggregationStage, BucketStage, FacetStage, GraphLookupStage, GroupStage, MergeStage, ProjectStage, RedactStage, ReplaceRootStage } from "./aggregation/AggregationStage";
+import { AggregationBuilder } from "./aggregation/AggregationBuilder";
 
 
 type ComparisonOperators<T> = {
@@ -38,7 +39,7 @@ export class QueryBuilder<T extends Document>{
     private session: ClientSession | null = null;
     private sort: Sort = {};
     private projection: { [key: string]: 1 | 0 } = {};
-    private aggregationPipeline: AggregationStage<T>[] = [];
+    
     private page: number = 1; // Pagination page number
     private pageSize: number = 10; // Pagination page size
     private plugins: Plugin<T>[] = [];
@@ -177,19 +178,6 @@ export class QueryBuilder<T extends Document>{
         return this
     }
 
-    /**
-     * Validates the aggregation pipeline before execution.
-     * @throws {MongridError} If the pipeline is empty or invalid.
-     */
-    private validatePipeline(): void {
-        if (this.aggregationPipeline.length === 0) {
-            throw new MongridError(
-                "Aggregation pipeline is empty",
-                ERROR_CODES.AGGREGATION_ERROR,
-                { pipeline: this.aggregationPipeline }
-            );
-        }
-    }
 
     
 
@@ -198,54 +186,16 @@ export class QueryBuilder<T extends Document>{
     //     return this;
     // }
 
-    async aggregate(): Promise<any[]> {
-        try {
-            this.validatePipeline();
-            return this.model.getCollection().aggregate(this.aggregationPipeline).toArray();
-        } catch (error: any) {
-            throw new MongridError(
-                `Aggregation failed: ${error.message}`,
-                ERROR_CODES.AGGREGATION_ERROR,
-                { pipeline: this.aggregationPipeline }
-            );
-        }
-    }
 
     /**
-     * Adds a $count stage to the aggregation pipeline.
-     * @param fieldName The name of the field to store the count.
-     * @returns The QueryBuilder instance for chaining.
-     * @example
-     * queryBuilder.countAgg("totalOrders");
+     * Returns an instance of AggregationBuilder for building aggregation pipelines.
+     * @returns An instance of AggregationBuilder.
      */
-    countAgg(fieldName: string): this {
-        this.aggregationPipeline.push({ $count: fieldName });
-        return this;
+    aggregate(): AggregationBuilder<T> {
+        return new AggregationBuilder<T>(this.model);
     }
 
-    /**
-     * Adds a $limit stage to the aggregation pipeline.
-     * @param limit The maximum number of documents to pass to the next stage.
-     * @returns The QueryBuilder instance for chaining.
-     * @example
-     * queryBuilder.limitAgg(10);
-     */
-    limitAgg(limit: number): this {
-        this.aggregationPipeline.push({ $limit: limit });
-        return this;
-    }
 
-    /**
-     * Adds a $skip stage to the aggregation pipeline.
-     * @param skip The number of documents to skip.
-     * @returns The QueryBuilder instance for chaining.
-     * @example
-     * queryBuilder.skipAgg(5);
-     */
-    skipAgg(skip: number): this {
-        this.aggregationPipeline.push({ $skip: skip });
-        return this;
-    }
 
 
     paginate(page:number, pageSize:number):this{
@@ -269,135 +219,9 @@ export class QueryBuilder<T extends Document>{
         }
     }
 
-     /**
-     * Adds a $lookup stage to the aggregation pipeline.
-     * @param from The collection to join.
-     * @param localField The field from the input documents.
-     * @param foreignField The field from the documents of the "from" collection.
-     * @param as The name of the new array field.
-     * @returns The QueryBuilder instance for chaining.
-     */
-     lookup(from: string, localField: string, foreignField: string, as: string): this {
-        this.aggregationPipeline.push({
-            $lookup: {
-                from,
-                localField,
-                foreignField,
-                as,
-            },
-        });
-        return this;
-    }
+   
 
-     /**
-     * Adds a $unwind stage to the aggregation pipeline.
-     * @param path The field path to unwind.
-     * @returns The QueryBuilder instance for chaining.
-     */
-     unwind(path: string): this {
-        this.aggregationPipeline.push({ $unwind: `$${path}` });
-        return this;
-    }
 
-    /**
-     * Adds a $addFields stage to the aggregation pipeline.
-     * @param fields The fields to add.
-     * @returns The QueryBuilder instance for chaining.
-     */
-    addFields(fields: AddFieldsStage<T>["$addFields"]): this {
-        this.aggregationPipeline.push({ $addFields: fields });
-        return this;
-    }
-
-    /**
-     * Adds a $redact stage to the aggregation pipeline.
-     * @param redact The redact configuration.
-     * @returns The QueryBuilder instance for chaining.
-     */
-    redact(redact: RedactStage<T>["$redact"]): this {
-        this.aggregationPipeline.push({ $redact: redact });
-        return this;
-    }
-
-    /**
-     * Adds a $merge stage to the aggregation pipeline.
-     * @param merge The merge configuration.
-     * @returns The QueryBuilder instance for chaining.
-     */
-    merge(merge: MergeStage<T>["$merge"]): this {
-        this.aggregationPipeline.push({ $merge: merge });
-        return this;
-    }
-
-    /**
-     * Adds a $graphLookup stage to the aggregation pipeline.
-     * @param graphLookup The graph lookup configuration.
-     * @returns The QueryBuilder instance for chaining.
-     */
-    graphLookup(graphLookup: GraphLookupStage<T>["$graphLookup"]): this {
-        this.aggregationPipeline.push({ $graphLookup: graphLookup });
-        return this;
-    }
-
-    /**
-     * Adds a $replaceRoot stage to the aggregation pipeline.
-     * @param newRoot The new root document.
-     * @returns The QueryBuilder instance for chaining.
-     */
-    replaceRoot(newRoot: ReplaceRootStage<T>["$replaceRoot"]["newRoot"]): this {
-        this.aggregationPipeline.push({ $replaceRoot: { newRoot } });
-        return this;
-    }
-
-    /**
-     * Adds a $bucket stage to the aggregation pipeline.
-     * @param bucket The bucket configuration.
-     * @returns The QueryBuilder instance for chaining.
-     */
-    bucket(bucket: BucketStage<T>["$bucket"]): this {
-        this.aggregationPipeline.push({ $bucket: bucket });
-        return this;
-    }
-
-    /**
-     * Adds a $facet stage to the aggregation pipeline.
-     * @param facets The facets to create.
-     * @returns The QueryBuilder instance for chaining.
-     */
-    facet(facets: FacetStage<T>["$facet"]): this {
-        this.aggregationPipeline.push({ $facet: facets });
-        return this;
-    }
-
-    /**
-     * Adds a $project stage to the aggregation pipeline.
-     * @param project The projection criteria.
-     * @returns The QueryBuilder instance for chaining.
-     */
-    project(project: ProjectStage<T>["$project"]): this {
-        this.aggregationPipeline.push({ $project: project });
-        return this;
-    }
-
-    /**
-     * Adds a $group stage to the aggregation pipeline.
-     * @param group The grouping criteria.
-     * @returns The QueryBuilder instance for chaining.
-     */
-    group(group: GroupStage<T>["$group"]): this {
-        this.aggregationPipeline.push({ $group: group });
-        return this;
-    }
-
-    /**
-     * Adds a $match stage to the aggregation pipeline.
-     * @param filter The filter to apply.
-     * @returns The QueryBuilder instance for chaining.
-     */
-    match(filter: Filter<T>): this {
-        this.aggregationPipeline.push({ $match: filter });
-        return this;
-    }
 
     /**
      * Explains the query execution plan.
@@ -420,14 +244,8 @@ export class QueryBuilder<T extends Document>{
     async execute(): Promise<T[]> {
         try {
             
-            if (this.aggregationPipeline.length > 0) {
-                // Use aggregation pipeline if stages are added
-                return this.model.getCollection().aggregate<T>(this.aggregationPipeline, { session: this.session! }).toArray();
-            } else {
-                // Use find query with filter, options, and populated fields
-                return this.model.find(this.filter,
-                     { ...this.options, sort: this.sort, projection: this.projection, session: this.session! }, this.populatedFields);
-            }
+            return this.model.find(this.filter,
+                { ...this.options, sort: this.sort, projection: this.projection, session: this.session! }, this.populatedFields);
         } catch (error:any) {
             throw new MongridError(
                 `Query execution failed: ${error.message}`,
