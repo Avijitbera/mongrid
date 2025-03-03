@@ -1,5 +1,5 @@
 import { Document, Filter } from "mongodb";
-import { AggregationStage, CountStage, GroupStage, LimitStage, LookupStage, MatchStage, ProjectStage, SkipStage, SortStage, UnwindStage } from "./AggregationStage";
+import { AddFieldsStage, AggregationStage, CountStage, FacetStage, GroupStage, LimitStage, LookupStage, MatchStage, ProjectStage, ReplaceRootStage, SkipStage, SortStage, UnwindStage } from "./AggregationStage";
 import { Model } from "../model";
 import { ERROR_CODES, MongridError } from "../../error/MongridError";
 
@@ -106,6 +106,39 @@ export class AggregationBuilder<T extends Document>{
     unwind(path: string): this {
         const unwindStage: UnwindStage<T> = { $unwind: path };
         this.aggregationPipeline.push(unwindStage);
+        return this;
+    }
+
+    /**
+     * Adds a $addFields stage to the aggregation pipeline.
+     * @param fields The fields to add.
+     * @returns The AggregationBuilder instance for chaining.
+     */
+    addFields(fields: AddFieldsStage<T>['$addFields']): this {
+        const addFieldsStage: AddFieldsStage<T> = { $addFields: fields };
+        this.aggregationPipeline.push(addFieldsStage);
+        return this;
+    }
+
+    /**
+     * Adds a $replaceRoot stage to the aggregation pipeline.
+     * @param newRoot The new root document.
+     * @returns The AggregationBuilder instance for chaining.
+     */
+    replaceRoot(newRoot: ReplaceRootStage<T>['$replaceRoot']['newRoot']): this {
+        const replaceRootStage: ReplaceRootStage<T> = { $replaceRoot: { newRoot } };
+        this.aggregationPipeline.push(replaceRootStage);
+        return this;
+    }
+
+    /**
+     * Adds a $facet stage to the aggregation pipeline.
+     * @param facets The facets to create.
+     * @returns The AggregationBuilder instance for chaining.
+     */
+    facet(facets: FacetStage<T>['$facet']): this {
+        const facetStage: FacetStage<T> = { $facet: facets };
+        this.aggregationPipeline.push(facetStage);
         return this;
     }
 
