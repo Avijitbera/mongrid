@@ -3,7 +3,7 @@ import { Model } from "./model";
 import { equal, notEqual } from "assert";
 import { ERROR_CODES, MongridError } from "../error/MongridError";
 import { Plugin } from "./plugin/plugin";
-import { AddFieldsStage, AggregationStage, BucketStage, FacetStage, GraphLookupStage, GroupStage, MergeStage, ProjectStage, RedactStage, ReplaceRootStage } from "./types/AggregationStage";
+import { AddFieldsStage, AggregationStage, BucketStage, FacetStage, GraphLookupStage, GroupStage, MergeStage, ProjectStage, RedactStage, ReplaceRootStage } from "./aggregation/AggregationStage";
 
 
 type ComparisonOperators<T> = {

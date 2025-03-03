@@ -22,7 +22,7 @@ export interface SortStage<T> {
     $sort: Sort
 }
 
-interface ProjectStage<T> {
+export interface ProjectStage<T> {
     $project: {
         [key in keyof T]?: 1 | 0 | { $substr?: [string, number, number] };
     };

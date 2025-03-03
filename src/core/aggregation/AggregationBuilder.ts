@@ -1,6 +1,7 @@
 import { Document, Filter } from "mongodb";
-import { AggregationStage, CountStage, GroupStage, LimitStage, LookupStage, MatchStage, SkipStage, SortStage } from "./AggregationStage";
+import { AggregationStage, CountStage, GroupStage, LimitStage, LookupStage, MatchStage, ProjectStage, SkipStage, SortStage, UnwindStage } from "./AggregationStage";
 import { Model } from "../model";
+import { ERROR_CODES, MongridError } from "../../error/MongridError";
 
 export class AggregationBuilder<T extends Document>{
     private aggregationPipeline: AggregationStage<T>[] = [];
@@ -83,5 +84,52 @@ export class AggregationBuilder<T extends Document>{
         const skipStage: SkipStage<T> = { $skip: skip };
         this.aggregationPipeline.push(skipStage);
         return this;
+    }
+
+
+    /**
+     * Adds a $project stage to the aggregation pipeline.
+     * @param project The projection criteria.
+     * @returns The AggregationBuilder instance for chaining.
+     */
+    project(project: ProjectStage<T>['$project']): this {
+        const projectStage: ProjectStage<T> = { $project: project };
+        this.aggregationPipeline.push(projectStage);
+        return this;
+    }
+
+    /**
+     * Adds a $unwind stage to the aggregation pipeline.
+     * @param path The field path to unwind.
+     * @returns The AggregationBuilder instance for chaining.
+     */
+    unwind(path: string): this {
+        const unwindStage: UnwindStage<T> = { $unwind: path };
+        this.aggregationPipeline.push(unwindStage);
+        return this;
+    }
+
+     /**
+     * Executes the aggregation pipeline.
+     * @returns A promise that resolves to the aggregation results.
+     * @throws {MongridError} If the aggregation fails.
+     */
+     async execute(): Promise<T[]> {
+        try {
+            if (this.aggregationPipeline.length === 0) {
+                throw new MongridError(
+                    "Aggregation pipeline is empty",
+                    ERROR_CODES.AGGREGATION_ERROR,
+                    { pipeline: this.aggregationPipeline }
+                );
+            }
+            return this.model.getCollection().aggregate<T>(this.aggregationPipeline).toArray();
+        } catch (error: any) {
+            throw new MongridError(
+                `Aggregation failed: ${error.message}`,
+                ERROR_CODES.AGGREGATION_ERROR,
+                { pipeline: this.aggregationPipeline, errorDetails: error }
+            );
+        }
     }
 }
