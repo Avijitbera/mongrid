@@ -1,5 +1,5 @@
 import { Document, Filter } from "mongodb";
-import { AddFieldsStage, AggregationStage, BucketStage, CountStage, FacetStage, GraphLookupStage, GroupStage, LimitStage, LookupStage, MatchStage, ProjectStage, ReplaceRootStage, SkipStage, SortStage, UnwindStage } from "./AggregationStage";
+import { AddFieldsStage, AggregationStage, BucketStage, CountStage, FacetStage, GraphLookupStage, GroupStage, LimitStage, LookupStage, MatchStage, MergeStage, ProjectStage, RedactStage, ReplaceRootStage, SkipStage, SortStage, UnwindStage } from "./AggregationStage";
 import { Model } from "../model";
 import { ERROR_CODES, MongridError } from "../../error/MongridError";
 
@@ -162,6 +162,30 @@ export class AggregationBuilder<T extends Document>{
     graphLookup(graphLookup: GraphLookupStage<T>['$graphLookup']): this {
         const graphLookupStage: GraphLookupStage<T> = { $graphLookup: graphLookup };
         this.aggregationPipeline.push(graphLookupStage);
+        return this;
+    }
+
+
+
+    /**
+     * Adds a $merge stage to the aggregation pipeline.
+     * @param merge The merge configuration.
+     * @returns The AggregationBuilder instance for chaining.
+     */
+    merge(merge: MergeStage<T>['$merge']): this {
+        const mergeStage: MergeStage<T> = { $merge: merge };
+        this.aggregationPipeline.push(mergeStage);
+        return this;
+    }
+
+    /**
+     * Adds a $redact stage to the aggregation pipeline.
+     * @param redact The redact configuration.
+     * @returns The AggregationBuilder instance for chaining.
+     */
+    redact(redact: RedactStage<T>['$redact']): this {
+        const redactStage: RedactStage<T> = { $redact: redact };
+        this.aggregationPipeline.push(redactStage);
         return this;
     }
     
