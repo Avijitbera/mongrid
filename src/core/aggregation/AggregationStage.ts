@@ -6,9 +6,9 @@ export interface MatchStage<T> {
 
 export interface GroupStage<T> {
     $group: {
-        _id: any;
+        _id: any; // Explicitly define the _id field
         [key: string]: {
-            $sum?: number | string;
+            $sum?: number | string | { [operator: string]: any }; // Allow nested operators
             $avg?: number | string;
             $min?: number | string;
             $max?: number | string;

@@ -24,8 +24,8 @@ export class AggregationBuilder<T extends Document>{
      * @param group The grouping criteria.
      * @returns The AggregationBuilder instance for chaining.
      */
-    group(group: GroupStage<T>['$group']): this {
-        const groupStage: AggregationStage<T> = { $group: group };
+    group(group: { _id: any; [key: string]: any }): this {
+        const groupStage: GroupStage<T> = { $group: group };
         this.aggregationPipeline.push(groupStage);
         return this;
     }

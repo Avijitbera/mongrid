@@ -5,7 +5,7 @@ dotenv.config()
 let db: Db;
 
 const uri = process.env.MONGO_URI;
-const dbName = `bsonify_temp`;
+const dbName = `bsonify_temp_1`;
 
 export async function connect() {
     if(db) return db;
