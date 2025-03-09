@@ -1,8 +1,29 @@
-# Mongrid ORM
+# Mongrid ORM 🚀
+
+![NPM Version](https://img.shields.io/npm/v/mongrid)
+![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/Avijitbera/https%3A%2F%2Fgithub.com%2FAvijitbera%2Fmongrid)
+![Discord](https://img.shields.io/discord/1330906862396379248)
+![Static Badge](https://img.shields.io/badge/Full-Documentaion-blue)
+![NPM Last Update](https://img.shields.io/npm/last-update/mongrid?registry_uri=https%3A%2F%2Fgithub.com%2FAvijitbera%2Fmongrid&style=flat)
+![NPM Downloads](https://img.shields.io/npm/dw/mongrid)
+![NPM Unpacked Size](https://img.shields.io/npm/unpacked-size/mongrid)
+![NPM License](https://img.shields.io/npm/l/mongrid)
 
 A lightweight, type-safe MongoDB ORM for Node.js and TypeScript. Easily define models, fields, validations, and hooks for your MongoDB collections.
 
 ---
+
+## 📢 Notice to Users
+
+We value your feedback! If you encounter any issues, have suggestions for new features, or want to contribute to the improvement of Mongrid, please feel free to:
+
+- **Report Bugs**: Open an issue on our [GitHub Issues](https://github.com/your-repo/mongrid/issues) page.
+- **Suggest Features**: Share your ideas for new features or improvements.
+- **Contribute**: Check out our [Contribution Guidelines](./docs/CONTRIBUTING.md) to get started.
+
+Join our [Discord Community](https://discord.gg/your-invite-link) to connect with other developers and get real-time support.
+
+
 
 ## Table of Contents
 
@@ -16,12 +37,13 @@ A lightweight, type-safe MongoDB ORM for Node.js and TypeScript. Easily define m
 8. [Querying Data](#querying-data)
    - [find](#find)
    - [findById](#findbyid)
+   - [updateById](#updatebyid)
 9. [Query Builder](#query-builder)
 10. [Example Usage](#example-usage)
-    - [TypeScript](#typescript-example)
-    - [JavaScript](#javascript-example)
-11. [Contributing](#contributing)
-12. [License](#license)
+11. [Bug Issues](#bug-issues)
+12. [Contributing](#contributing)
+13. [License](#license)
+14. [Full Documentation](#full-documentation)
 
 ---
 
@@ -47,16 +69,6 @@ import { Database, Connection } from 'mongrid';
 const connection = new Connection(`mongodb+srv://${user}:${password}@localhost:27017/`);
 await connection.connect('mydatabase');
 const db = new Database(connection.getDatabase()!);
-```
-
-### **JavaScript**
-
-```javascript
-const { Database, Connection } = require('mongrid');
-
-const connection = new Connection(`mongodb+srv://${user}:${password}@localhost:27017/`);
-await connection.connect('mydatabase');
-const db = new Database(connection.getDatabase());
 ```
 
 - **Connection String**: Replace `mongodb+srv://${user}:${password}@localhost:27017/` with your MongoDB connection string.
@@ -94,22 +106,6 @@ const userModel = new ModelBuilder<User>(db, 'users')
     .build();
 ```
 
-### **JavaScript**
-
-```javascript
-const { ModelBuilder, FieldBuilder, NestedField } = require('mongrid');
-
-const userModel = new ModelBuilder(db, 'users')
-    .addField('name', new FieldBuilder('name').required().type(String).build())
-    .addField('email', new FieldBuilder('email').required().type(String).unique().build())
-    .addField('age', new FieldBuilder('age').type(Number).build())
-    .addNestedField('address', new NestedField('address')
-        .addField('city', new FieldBuilder('city').required().type(String).build())
-        .addField('country', new FieldBuilder('country').required().type(String).build())
-    )
-    .build();
-```
-
 ---
 
 ## Field Builders
@@ -130,22 +126,8 @@ Field builders allow you to define fields with various options:
 
 ### **Example**
 
-#### **TypeScript**
-
 ```typescript
 const emailField = new FieldBuilder<string>('email')
-    .required()
-    .type(String)
-    .unique()
-    .default('example@example.com')
-    .transform((value) => value.toLowerCase())
-    .build();
-```
-
-#### **JavaScript**
-
-```javascript
-const emailField = new FieldBuilder('email')
     .required()
     .type(String)
     .unique()
@@ -163,8 +145,6 @@ Validators ensure that your data meets specific requirements before saving it to
 ### **Custom Validators**
 
 Create custom validators by extending the `Validator` class:
-
-#### **TypeScript**
 
 ```typescript
 import { Validator } from 'mongrid';
@@ -185,43 +165,11 @@ class EmailValidator<T extends { email: string }> extends Validator<T> {
 }
 ```
 
-#### **JavaScript**
-
-```javascript
-const { Validator } = require('mongrid');
-
-class EmailValidator extends Validator {
-    message = 'Invalid email format';
-
-    validate(document) {
-        const errors = [];
-        if (!document.email.includes('@')) {
-            errors.push('Email must contain "@"');
-        }
-        if (!document.email.endsWith('.com')) {
-            errors.push('Email must end with ".com"');
-        }
-        return errors;
-    }
-}
-```
-
 ### **Add Validators to a Model**
-
-#### **TypeScript**
 
 ```typescript
 const userModel = new ModelBuilder<User>(db, 'users')
     .addField('email', new FieldBuilder<string>('email').required().type(String).build())
-    .addValidator(new EmailValidator())
-    .build();
-```
-
-#### **JavaScript**
-
-```javascript
-const userModel = new ModelBuilder(db, 'users')
-    .addField('email', new FieldBuilder('email').required().type(String).build())
     .addValidator(new EmailValidator())
     .build();
 ```
@@ -245,8 +193,6 @@ Hooks allow you to execute custom logic at specific points in the document lifec
 
 ### **Example Hook**
 
-#### **TypeScript**
-
 ```typescript
 import { Hook, HookType } from 'mongrid';
 
@@ -261,22 +207,6 @@ const userModel = new ModelBuilder<User>(db, 'users')
     .build();
 ```
 
-#### **JavaScript**
-
-```javascript
-const { Hook, HookType } = require('mongrid');
-
-class LogBeforeSaveHook extends Hook {
-    async execute(data) {
-        console.log('BeforeSave Hook: Document is about to be saved:', data);
-    }
-}
-
-const userModel = new ModelBuilder(db, 'users')
-    .addHook(HookType.PreSave, new LogBeforeSaveHook())
-    .build();
-```
-
 ---
 
 ## Relationships
@@ -284,8 +214,6 @@ const userModel = new ModelBuilder(db, 'users')
 Mongrid supports **One-to-One**, **One-to-Many**, and **Many-to-Many** relationships between models.
 
 ### **Example: One-to-One Relationship**
-
-#### **TypeScript**
 
 ```typescript
 const postModel = new ModelBuilder<Post>(db, 'posts')
@@ -296,40 +224,17 @@ const postModel = new ModelBuilder<Post>(db, 'posts')
     .build();
 ```
 
-#### **JavaScript**
-
-```javascript
-const postModel = new ModelBuilder(db, 'posts')
-    .addField('title', new FieldBuilder('title').required().type(String).build())
-    .addField('content', new FieldBuilder('content').required().type(String).build())
-    .addField('author', new FieldBuilder('author').required().type(ObjectId).build())
-    .addOneToOne('author', userModel, 'author', true) // Cascade delete
-    .build();
-```
-
 ---
 
 ## Querying Data
 
-Mongrid provides methods to query data from your collections, including `find` and `findById`.
+Mongrid provides methods to query data from your collections, including `find`, `findById`, and `updateById`.
 
 ### **find**
 
 The `find` method allows you to query documents with optional population of related fields.
 
-#### **TypeScript**
-
 ```typescript
-const posts = await postModel.find({});
-console.log(posts);
-
-const postsWithAuthor = await postModel.find({}, {}, ['author']);
-console.log(postsWithAuthor);
-```
-
-#### **JavaScript**
-
-```javascript
 const posts = await postModel.find({});
 console.log(posts);
 
@@ -341,18 +246,7 @@ console.log(postsWithAuthor);
 
 The `findById` method allows you to find a document by its ID and optionally populate related fields.
 
-
 ```typescript
-const post = await postModel.findById(postId);
-console.log(post);
-
-const postWithAuthor = await postModel.findById(postId, ['author']);
-console.log(postWithAuthor);
-```
-
-#### **JavaScript**
-
-```javascript
 const post = await postModel.findById(postId);
 console.log(post);
 
@@ -364,15 +258,7 @@ console.log(postWithAuthor);
 
 The `updateById` method allows you to update a document by its ID.
 
-
 ```typescript
-const post = await postModel.updateById(postId, {title: 'Updated Title'});
-console.log(post);
-```
-
-#### **JavaScript**
-
-```javascript
 const post = await postModel.updateById(postId, {title: 'Updated Title'});
 console.log(post);
 ```
@@ -402,27 +288,8 @@ Mongrid provides a type-safe query builder for constructing complex queries.
 
 ### **Example Usage**
 
-#### **TypeScript**
-
 ```typescript
 const queryBuilder = new QueryBuilder<User>(userModel)
-    .where('age', 'greaterThan', 18) // Simplified comparison operator
-    .where('name', 'equal', 'John Doe') // Simplified comparison operator
-    .and([
-        { status: 'in', ['active'] }, // Simplified comparison operator
-    ])
-    .limit(10)
-    .sort('age', 'asc')
-    .populate('email');
-
-const users = await queryBuilder.execute();
-console.log(users);
-```
-
-#### **JavaScript**
-
-```javascript
-const queryBuilder = new QueryBuilder(userModel)
     .where('age', 'greaterThan', 18) // Simplified comparison operator
     .where('name', 'equal', 'John Doe') // Simplified comparison operator
     .and([
@@ -505,71 +372,19 @@ async function updateOrCreateUser(){
 }
 
 updateOrCreateUser().catch(console.error);
-
 ```
 
-### **JavaScript Example**
+---
 
-```javascript
-const { Database, ModelBuilder, FieldBuilder, NestedField } = require('mongrid');
+## Bug Issues
 
-// Connect to the database
-const db = new Database('mongodb://localhost:27017', 'mydatabase');
-
-// Define the User model
-const userModel = new ModelBuilder(db, 'users')
-    .addField('name', new FieldBuilder('name').required().type(String).build())
-    .addField('email', new FieldBuilder('email').required().type(String).unique().build())
-    .addField('age', new FieldBuilder('age').type(Number).build())
-    .addNestedField('address', new NestedField('address')
-        .addField('city', new FieldBuilder('city').required().type(String).build())
-        .addField('country', new FieldBuilder('country').required().type(String).build())
-    )
-    .build();
-
-// Save a user
-async function createUser() {
-    const userId = await userModel.save({
-        name: 'John Doe',
-        email: 'john@example.com',
-        age: 30,
-        address: {
-            city: 'New York',
-            country: 'USA',
-        },
-    });
-
-    console.log('User saved with ID:', userId);
-    return userId;
-}
-
-createUser().catch(console.error);
-
-// update or create a user if it doesn't exist by the same ID
-async function updateOrCreateUser(){
-    const userId = await userModel.save({
-        name: 'John Doe',
-        email: 'john@example.com',
-        age: 30,
-        address: {
-            city: 'New York',
-            country: 'USA',
-        },
-        _id: 'existingUserId' // ObjectId
-    });
-
-    return userId;
-}
-
-updateOrCreateUser().catch(console.error);
-
-```
+If you encounter any bugs or issues while using Mongrid, please report them on our [GitHub Issues](https://github.com/your-repo/mongrid/issues) page. We appreciate your feedback and will work to resolve any problems as quickly as possible.
 
 ---
 
 ## Contributing
 
-We welcome contributions from the community! Please read our [Contribution Guidelines](./docs/CONTRIBUTING.md) to get started.
+We welcome contributions from the community! Please read our [Contribution Guidelines](./docs/CONTRIBUTING.md) to get started. Whether you want to report a bug, suggest a feature, or submit a pull request, your help is greatly appreciated.
 
 ---
 
@@ -579,4 +394,10 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ---
 
-This updated `README.md` now focuses on the core features of Mongrid, including **query builder**, and provides clear examples for both TypeScript and JavaScript users.
+## Full Documentation
+
+For complete documentation, including advanced usage, API references, and more examples, please visit our official documentation website: [Mongrid Documentation](https://mongrid-docs.com).
+
+---
+
+This updated `README.md` now includes a more visually appealing design with version badges, open issues, Discord online users, and a notice for users to contribute and suggest new features. The JavaScript implementations have been removed to focus on TypeScript. The quick links section is now wrapped for better readability.
