@@ -35,8 +35,12 @@ export class FieldBuilder<T> {
     //     return this;
     // }
 
-    default(value: T): this {
-        this.field.default(value);
+    default(value: T | (() => T)): this {
+        if (typeof value === 'function') {
+            this.field.default((value as () => T)());
+        } else {
+            this.field.default(value);
+        }
         return this;
     }
 
