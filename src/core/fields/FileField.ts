@@ -33,4 +33,33 @@ export class FileField<T> extends Field<T> {
         this.maxFileSize = maxFileSize;
         return this;
     }
+
+     /**
+     * Sets the allowed MIME types for the file.
+     * @param mimeTypes An array of allowed MIME types (e.g., ['image/jpeg', 'application/pdf']).
+     * @returns The FileField instance for chaining.
+     */
+     allowedTypes(mimeTypes: string[]): this {
+        this.allowedMimeTypes = mimeTypes;
+        return this;
+    }
+    /**
+     * Enables or disables automatic file deletion when the document is deleted.
+     * @param autoDelete Whether to automatically delete the file.
+     * @returns The FileField instance for chaining.
+     */
+    autoDeleteOnRemove(autoDelete: boolean): this {
+        this.autoDelete = autoDelete;
+        return this;
+    }
+
+    /**
+     * Enables or disables URL generation for the file.
+     * @param generateUrl Whether to generate a URL for the file.
+     * @returns The FileField instance for chaining.
+     */
+    enableUrlGeneration(generateUrl: boolean): this {
+        this.generateUrl = generateUrl;
+        return this;
+    }
 }
