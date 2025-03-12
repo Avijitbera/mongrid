@@ -1,6 +1,13 @@
 import { ObjectId } from "mongodb";
 import { Field } from "./Field";
 
+interface File {
+    originalname: string; // Original file name
+    buffer: Buffer; // File content as a Buffer
+    mimetype: string; // MIME type of the file
+    size: number; // File size in bytes
+}
+
 export class FileField<T> extends Field<T> {
     private bucketName: string = 'files';
     private maxFileSize: number = 16 * 1024 * 1024;
@@ -62,4 +69,16 @@ export class FileField<T> extends Field<T> {
         this.generateUrl = generateUrl;
         return this;
     }
+
+    /**
+     * Enables or disables caching of file metadata.
+     * @param cacheMetadata Whether to cache file metadata.
+     * @returns The FileField instance for chaining.
+     */
+    enableMetadataCaching(cacheMetadata: boolean): this {
+        this.cacheMetadata = cacheMetadata;
+        return this;
+    }
+
+    
 }

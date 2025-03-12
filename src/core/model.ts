@@ -13,6 +13,7 @@ import { AggregationBuilder } from './aggregation/AggregationBuilder';
 
 export class Model<T extends Document> {
     private collection: Collection<T>;
+    private database: Db;
     private hooks: {[key in HookType]?: Hook<T>[]} = {};
     private validators: Validator<T>[] = [];
     private indexes: IndexDescription[] = [];
@@ -43,6 +44,11 @@ export class Model<T extends Document> {
      */
     constructor(private db: Database, collectionName: string) {
         this.collection = db.getCollection<T>(collectionName);
+        this.database = db.getDatabase();
+    }
+
+    getDb():Db{
+return this.database;
     }
 
     /**
