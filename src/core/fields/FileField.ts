@@ -3,7 +3,7 @@ import { Field } from "./Field";
 import { ERROR_CODES, MongridError } from "../../error/MongridError";
 import { Model } from "../model";
 
-interface File {
+export interface File {
     originalname: string; // Original file name
     buffer: Buffer; // File content as a Buffer
     mimetype: string; // MIME type of the file

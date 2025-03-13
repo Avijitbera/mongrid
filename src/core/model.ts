@@ -10,6 +10,7 @@ import { RelationshipMetadata, RelationshipType } from './relationships/Relation
 import { Plugin } from './plugin/plugin';
 import {ERROR_CODES, MongridError} from '../error/MongridError'
 import { AggregationBuilder } from './aggregation/AggregationBuilder';
+import { FileField, File } from './fields/FileField';
 
 export class Model<T extends Document> {
     private collection: Collection<T>;
@@ -454,6 +455,22 @@ return this.database;
         const document = await this.findById(id);
         if (document) {
             await this.executeHooks(HookType.PreUpdate, document);
+              // Handle file updates for FileField
+              for (const [fieldName, field] of Object.entries(this.fields)) {
+                if (field instanceof FileField && data[fieldName as keyof T]) {
+                    const newFile = data[fieldName as keyof T] as unknown as File; // Type assertion
+                    const oldFileId = document[fieldName as keyof T] as unknown as ObjectId; // Type assertion
+
+                    // Upload the new file
+                    const { id: newFileId, metadata } = await field.uploadFile(newFile, this);
+                    data[fieldName as keyof T] = newFileId as unknown as T[keyof T]; // Store the new file ID in the document
+
+                    // Delete the old file if it exists
+                    if (oldFileId) {
+                        await field.deleteFile(oldFileId, this);
+                    }
+                }
+            }
         }
     
         // Perform the update operation
@@ -538,13 +555,14 @@ return this.database;
         const result = await this.collection.updateMany(filter, update);
         return result.modifiedCount
     }
+
+
+
     /**
-     * Saves a document to the collection.
+     * Saves a document to the collection, handling file uploads if necessary.
      * @param data The document to save.
-     * @param options Optional options.
+     * @param options Optional options, including a session for transactions.
      * @returns The ObjectId of the saved document.
-     * @throws {Error} If any of the required fields are not present.
-     * @throws {MongridError} If the document fails validation, or if any of the fields have the `immutable` option set to `true` and the field value is not undefined.
      */
     async save(data: OptionalUnlessRequiredId<T>, options?: {session?: ClientSession}): Promise<ObjectId> {
         await this.ensureCollection();
@@ -651,6 +669,13 @@ return this.database;
              }
              _id = aliasedData._id;
          } else {
+            for (const [fieldName, field] of Object.entries(this.fields)) {
+                if (field instanceof FileField && data[fieldName]) {
+                    const file = data[fieldName];
+                    const { id, metadata } = await field.uploadFile(file, this);
+                    data[fieldName] = id; // Store the file ID in the document
+                }
+            }
              // Insert new document
              const result = await this.collection.insertOne(aliasedData, { session: options?.session });
              _id = result.insertedId;
