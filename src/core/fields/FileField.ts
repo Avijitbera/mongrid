@@ -150,7 +150,98 @@ export class FileField<T extends Document> extends Field<T>  {
                 );
             });
         });
+
+
     }
+
+
+    /**
+     * Deletes a file from GridFS by its ID.
+     * @param fileId The ID of the file to delete.
+     * @param model The model instance.
+     * @returns A promise that resolves when the file is deleted.
+     * @throws {MongridError} If the file deletion fails.
+     */
+    async deleteFile(fileId: ObjectId, model: Model<T>): Promise<void> {
+        const db = model.getDb();
+        const bucket = new GridFSBucket(db, { bucketName: this.bucketName });
+
+        return new Promise(async(resolve, reject) => {
+            try {
+                await bucket.delete(fileId,);
+                if (this.cacheMetadata) {
+                    this.cachedMetadata.delete(fileId);
+                }
+                resolve()
+            } catch (error:any) {
+                reject(
+                    new MongridError(
+                        `File deletion failed: ${error.message}`,
+                        ERROR_CODES.FILE_DELETION_ERROR,
+                        { fileId }
+                    )
+                );
+            }
+            // bucket.delete(fileId, (error) => {
+            //     if (error) {
+            //         reject(
+            //             new MongridError(
+            //                 `File deletion failed: ${error.message}`,
+            //                 ERROR_CODES.FILE_DELETION_ERROR,
+            //                 { fileId }
+            //             )
+            //         );
+            //     } else {
+            //         // Remove metadata from cache if enabled
+            //         if (this.cacheMetadata) {
+            //             this.cachedMetadata.delete(fileId);
+            //         }
+            //         resolve();
+            //     }
+            // });
+        });
+    }
+
+/**
+     * Fetches file metadata from GridFS.
+     * @param fileId The ID of the file.
+     * @param model The model instance.
+     * @returns A promise that resolves to the file metadata.
+     */
+async getFileMetadata(fileId: ObjectId, model: Model<T>): Promise<any> {
+    // Return cached metadata if available
+    if (this.cacheMetadata && this.cachedMetadata.has(fileId)) {
+        return this.cachedMetadata.get(fileId);
+    }
+
+    const db = model.getDb();
+    const bucket = new GridFSBucket(db, { bucketName: this.bucketName });
+
+    const files = await bucket.find({ _id: fileId }).toArray();
+    if (files.length === 0) {
+        throw new MongridError(
+            `File not found`,
+            ERROR_CODES.FILE_NOT_FOUND,
+            { fileId }
+        );
+    }
+
+    const file = files[0];
+    const metadata = {
+        id: file._id,
+        filename: file.filename,
+        size: file.length,
+        mimeType: file.metadata?.mimeType,
+        uploadDate: file.uploadDate,
+    };
+
+    // Cache metadata if enabled
+    if (this.cacheMetadata) {
+        this.cachedMetadata.set(fileId, metadata);
+    }
+
+    return metadata;
+}
 
     
 }
