@@ -440,6 +440,13 @@ return this.database;
         populatedFields: K[] = []
     ): Promise<T | null> {
         const document = await this.find({_id: id} as Filter<T>, {}, populatedFields);
+        for (const [fieldName, field] of Object.entries(this.fields)) {
+            if (field instanceof FileField && document[0][fieldName as keyof T]) {
+                const fileId = document[0][fieldName as keyof T] as unknown as ObjectId; // Type assertion
+                const metadata = await field.getFileMetadata(fileId, this);
+                document[0][fieldName as keyof T] = metadata as unknown as T[keyof T]; // Replace the file ID with metadata
+            }
+        }
         return document[0] || null;
     }
 
