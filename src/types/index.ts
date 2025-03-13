@@ -1,4 +1,4 @@
 // export {ObjectId} from 'mongodb'
-import {ObjectId} from 'mongodb'
+import {ObjectId, Document} from 'mongodb'
 
-export { ObjectId }
+export { ObjectId, Document as Doc }
