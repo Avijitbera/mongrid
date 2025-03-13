@@ -243,5 +243,25 @@ async getFileMetadata(fileId: ObjectId, model: Model<T>): Promise<any> {
     return metadata;
 }
 
-    
+     /**
+     * Generates a URL to access the file.
+     * @param fileId The ID of the file.
+     * @param model The model instance.
+     * @returns A URL to access the file.
+     */
+     getFileUrl(fileId: ObjectId, model: Model<T>): string {
+        return `/files/${fileId}`; // Example URL
+    }
+
+    /**
+     * Streams a file from GridFS.
+     * @param fileId The ID of the file.
+     * @param model The model instance.
+     * @returns A readable stream for the file.
+     */
+    streamFile(fileId: ObjectId, model: Model<T>): any {
+        const db = model.getDb();
+        const bucket = new GridFSBucket(db, { bucketName: this.bucketName });
+        return bucket.openDownloadStream(fileId);
+    }
 }
