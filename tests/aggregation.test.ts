@@ -5,6 +5,10 @@ import { QueryBuilder } from '../src/core/QueryBuilder';
 import {User} from './model/user.model'
 import { connect } from './db';
 
+interface OrderWithTotal extends Order {
+    total: number; // Added field for the total
+}
+
 interface OrderRevenueByProduct {
     _id: string; // The product name
     totalRevenue: number; // The total revenue for the product
@@ -12,7 +16,7 @@ interface OrderRevenueByProduct {
 interface Order {
     id: string;
     product: string;
-    quantity: number;
+    quantity: number | number[];
     price: number;
 }
 
@@ -116,4 +120,31 @@ describe("AggregationBuilder Tests", () =>{
         expect(results[0].price).toBeDefined();
         expect(results[0].quantity).toBeUndefined(); // Quantity should not be included
     });
+
+    it('should add a new field using $addFields', async () => {
+        const results = await orderModel
+            .aggregate()
+            .addFields({ total: { $multiply: ["$quantity", "$price"] } }) // Add a total field
+            .execute()  as OrderWithTotal[];
+
+        expect(results).toHaveLength(3);
+        expect(results[0].total).toBe(2000); // Laptop: 2 * 1000
+        expect(results[1].total).toBe(1500); // Phone: 3 * 500
+        expect(results[2].total).toBe(300); // Tablet: 1 * 300
+    });
+
+
+    it('should unwind an array field', async () => {
+        // Insert a test document with an array field
+        await orderModel.save({ id: "4", product: "Accessories", quantity: [1, 2], price: 50 });
+
+        const results = await orderModel
+            .aggregate()
+            .unwind("$quantity") // Unwind the quantity array
+            .execute();
+
+        expect(results).toHaveLength(5); // Original 3 + 2 unwound documents
+    });
+
+
 })
