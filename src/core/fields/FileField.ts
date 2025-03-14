@@ -8,6 +8,7 @@ export interface File {
     buffer: Buffer; // File content as a Buffer
     mimetype: string; // MIME type of the file
     size: number; // File size in bytes
+    fileId?: ObjectId;
 }
 
 export class FileField<T extends Document> extends Field<T>  {
@@ -89,26 +90,18 @@ export class FileField<T extends Document> extends Field<T>  {
      * @returns A promise that resolves to the file ID and metadata.
      * @throws {MongridError} If the file upload fails.
      */
-    async uploadFile(file: File, model: Model<T>): Promise<{ id: ObjectId; metadata: any }> {
-        const db = model.getDb(); // Access the Db instance from the model
+    async uploadFile(file: File, model: Model<T>): Promise<File> {
+        const db = model.getDb();
         const bucket = new GridFSBucket(db, { bucketName: this.bucketName });
 
         // Validate file size
         if (file.size > this.maxFileSize) {
-            throw new MongridError(
-                `File size exceeds the maximum allowed size of ${this.maxFileSize} bytes`,
-                ERROR_CODES.FILE_SIZE_EXCEEDED,
-                { fileSize: file.size, maxFileSize: this.maxFileSize }
-            );
+            throw new Error(`File size exceeds the maximum allowed size of ${this.maxFileSize} bytes`);
         }
 
         // Validate MIME type
         if (this.allowedMimeTypes.length > 0 && !this.allowedMimeTypes.includes(file.mimetype)) {
-            throw new MongridError(
-                `File type '${file.mimetype}' is not allowed`,
-                ERROR_CODES.FILE_TYPE_NOT_ALLOWED,
-                { allowedMimeTypes: this.allowedMimeTypes }
-            );
+            throw new Error(`File type '${file.mimetype}' is not allowed`);
         }
 
         // Upload file to GridFS
@@ -124,34 +117,14 @@ export class FileField<T extends Document> extends Field<T>  {
             uploadStream.write(file.buffer);
             uploadStream.end(() => {
                 const fileId = uploadStream.id;
-                const metadata = {
-                    id: fileId,
-                    filename: file.originalname,
-                    size: file.size,
-                    mimeType: file.mimetype,
-                    uploadDate: new Date(),
-                };
-
-                // Cache metadata if enabled
-                if (this.cacheMetadata) {
-                    this.cachedMetadata.set(fileId, metadata);
-                }
-
-                resolve({ id: fileId, metadata });
+                file.fileId = fileId; // Store the ObjectId in the File object
+                resolve(file);
             });
 
-            uploadStream.on("error", (error:any) => {
-                reject(
-                    new MongridError(
-                        `File upload failed: ${error.message}`,
-                        ERROR_CODES.FILE_UPLOAD_ERROR,
-                        { error }
-                    )
-                );
+            uploadStream.on('error', (error) => {
+                reject(new Error(`File upload failed: ${error.message}`));
             });
         });
-
-
     }
 
 
