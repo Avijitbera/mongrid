@@ -64,4 +64,26 @@ describe("AggregationBuilder Tests", () =>{
         const aggregationBuilder = orderModel.aggregate();
         await expect(aggregationBuilder.execute()).rejects.toThrow("Aggregation pipeline is empty");
     });
+
+    it('should filter orders using $match stage', async () => {
+        const results = await orderModel
+            .aggregate()
+            .match({ product: "Laptop" }) // Filter orders for Laptop
+            .execute();
+
+        expect(results).toHaveLength(1);
+        expect(results[0].product).toBe("Laptop");
+    });
+
+    it('should sort orders by price in ascending order', async () => {
+        const results = await orderModel
+            .aggregate()
+            .sort({ price: 1 }) // Sort by price in ascending order
+            .execute();
+
+        expect(results).toHaveLength(3);
+        expect(results[0].product).toBe("Tablet"); // Lowest price
+        expect(results[1].product).toBe("Phone"); // Middle price
+        expect(results[2].product).toBe("Laptop"); // Highest price
+    });
 })
