@@ -132,6 +132,92 @@ describe('File Handling Tests', () => {
         await expect(fileField.getFileMetadata(fileId!, productModel)).rejects.toThrow('File not found');
     });
 
+    it('should generate a URL for the uploaded file', async () => {
+        // Create a mock file
+        const mockFile: File = {
+            originalname: 'test-image.jpg',
+            buffer: Buffer.from('mock file content'),
+            mimetype: 'image/jpeg',
+            size: 1024,
+        };
 
+        // Save the product with the uploaded file
+        const productId = await productModel.save({
+            id: '101',
+            name: 'Product with URL',
+            image: mockFile,
+        });
+
+        // Retrieve the product
+        const product = await productModel.findById(new ObjectId(productId));
+        expect(product).toBeDefined();
+
+        // Generate the file URL
+        const fileUrl = fileField.getFileUrl(product!.image.fileId!, productModel);
+        expect(fileUrl).toBeDefined();
+        expect(fileUrl).toMatch(/\/files\/[a-f0-9]{24}/); // URL should match the pattern
+    });
+
+    it('should stream a file from GridFS', async () => {
+        // Create a mock file
+        const mockFile: File = {
+            originalname: 'test-image.jpg',
+            buffer: Buffer.from('mock file content'),
+            mimetype: 'image/jpeg',
+            size: 1024,
+        };
+
+        // Save the product with the uploaded file
+        const productId = await productModel.save({
+            id: '102',
+            name: 'Product with Stream',
+            image: mockFile,
+        });
+
+        // Retrieve the product
+        const product = await productModel.findById(new ObjectId(productId));
+        expect(product).toBeDefined();
+
+        // Stream the file
+        const stream = fileField.streamFile(product!.image.fileId!, productModel);
+        expect(stream).toBeDefined();
+
+        // Read the stream and verify the content
+        const chunks: Buffer[] = [];
+        for await (const chunk of stream) {
+            chunks.push(chunk);
+        }
+        const fileContent = Buffer.concat(chunks).toString();
+        expect(fileContent).toBe('mock file content');
+    });
+
+    it('should handle file metadata caching', async () => {
+        // Create a mock file
+        const mockFile: File = {
+            originalname: 'cached-image.jpg',
+            buffer: Buffer.from('mock file content'),
+            mimetype: 'image/jpeg',
+            size: 1024,
+        };
+
+        // Save the product with the uploaded file
+        const productId = await productModel.save({
+            id: '103',
+            name: 'Product with Cached Metadata',
+            image: mockFile,
+        });
+
+        // Retrieve the product
+        const product = await productModel.findById(new ObjectId(productId));
+        expect(product).toBeDefined();
+
+        // Retrieve the file metadata (should be cached)
+        const fileMetadata = await fileField.getFileMetadata(product!.image.fileId!, productModel);
+        expect(fileMetadata).toBeDefined();
+
+        // Retrieve the file metadata again (should come from cache)
+        const cachedMetadata = await fileField.getFileMetadata(product!.image.fileId!, productModel);
+        expect(cachedMetadata).toEqual(fileMetadata);
+    });
 
 })
