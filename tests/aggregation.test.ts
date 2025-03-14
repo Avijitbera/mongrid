@@ -86,4 +86,34 @@ describe("AggregationBuilder Tests", () =>{
         expect(results[1].product).toBe("Phone"); // Middle price
         expect(results[2].product).toBe("Laptop"); // Highest price
     });
+
+    it('should limit the number of documents returned', async () => {
+        const results = await orderModel
+            .aggregate()
+            .limit(2) // Limit to 2 documents
+            .execute();
+
+        expect(results).toHaveLength(2);
+    });
+
+    it('should skip the first document', async () => {
+        const results = await orderModel
+            .aggregate()
+            .skip(1) // Skip the first document
+            .execute();
+
+        expect(results).toHaveLength(2);
+    });
+
+    it('should project specific fields', async () => {
+        const results = await orderModel
+            .aggregate()
+            .project({ product: 1, price: 1 }) // Include only product and price fields
+            .execute();
+
+        expect(results).toHaveLength(3);
+        expect(results[0].product).toBeDefined();
+        expect(results[0].price).toBeDefined();
+        expect(results[0].quantity).toBeUndefined(); // Quantity should not be included
+    });
 })
