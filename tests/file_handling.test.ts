@@ -104,4 +104,34 @@ describe('File Handling Tests', () => {
         ).rejects.toThrow('File size exceeds the maximum allowed size');
     });
 
+    it('should delete the file when the product is deleted', async () => {
+        // Create a mock file
+        const mockFile: File = {
+            originalname: 'test-image.jpg',
+            buffer: Buffer.from('mock file content'),
+            mimetype: 'image/jpeg',
+            size: 1024,
+        };
+
+        // Save the product with the uploaded file
+        const productId = await productModel.save({
+            id: '789',
+            name: 'Product to Delete',
+            image: mockFile,
+        });
+
+        // Retrieve the product and file ID
+        const product = await productModel.findById(new ObjectId(productId));
+        expect(product).toBeDefined();
+        const fileId = product!.image.fileId;
+
+        // Delete the product
+        await productModel.deleteById(new ObjectId(productId));
+
+        // Attempt to retrieve the file metadata (should throw an error)
+        await expect(fileField.getFileMetadata(fileId!, productModel)).rejects.toThrow('File not found');
+    });
+
+
+
 })
