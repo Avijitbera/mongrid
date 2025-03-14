@@ -66,4 +66,42 @@ describe('File Handling Tests', () => {
     expect(fileMetadata.size).toBe(1024);
     })
 
+    it('should throw an error when uploading a file with an invalid MIME type', async () => {
+        // Create a mock file with an invalid MIME type
+        const mockFile: File = {
+            originalname: 'test-file.pdf',
+            buffer: Buffer.from('mock file content'),
+            mimetype: 'application/pdf', // Invalid MIME type
+            size: 1024,
+        };
+
+        // Attempt to save the product with the invalid file
+        await expect(
+            productModel.save({
+                id: '456',
+                name: 'Invalid Product',
+                image: mockFile,
+            })
+        ).rejects.toThrow('File type \'application/pdf\' is not allowed');
+    });
+
+    it('should throw an error when uploading a file that exceeds the maximum size', async () => {
+        // Create a mock file that exceeds the maximum size
+        const mockFile: File = {
+            originalname: 'large-image.jpg',
+            buffer: Buffer.alloc(6 * 1024 * 1024), // 6MB (exceeds the 5MB limit)
+            mimetype: 'image/jpeg',
+            size: 6 * 1024 * 1024,
+        };
+
+        // Attempt to save the product with the oversized file
+        await expect(
+            productModel.save({
+                id: '999',
+                name: 'Oversized Product',
+                image: mockFile,
+            })
+        ).rejects.toThrow('File size exceeds the maximum allowed size');
+    });
+
 })
