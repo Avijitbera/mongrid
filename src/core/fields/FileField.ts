@@ -8,7 +8,8 @@ export interface File {
     buffer: Buffer; // File content as a Buffer
     mimetype: string; // MIME type of the file
     size: number; // File size in bytes
-    fileId?: ObjectId;
+    id?: ObjectId; // Optional field to store the file ID (ObjectId) after upload
+    metadata?: any; // Optional field to store file metadata
 }
 
 export class FileField<T extends Document> extends Field<T>  {
@@ -113,14 +114,30 @@ export class FileField<T extends Document> extends Field<T>  {
                     size: file.size,
                 },
             });
-
+    
             uploadStream.write(file.buffer);
             uploadStream.end(() => {
                 const fileId = uploadStream.id;
-                file.fileId = fileId; // Store the ObjectId in the File object
-                resolve(file);
+                const metadata = {
+                    id: fileId,
+                    filename: file.originalname,
+                    size: file.size,
+                    mimeType: file.mimetype,
+                    uploadDate: new Date(),
+                };
+    
+                // Cache metadata if enabled
+                if (this.cacheMetadata) {
+                    this.cachedMetadata.set(fileId, metadata);
+                }
+    
+                resolve({
+                    ...file,
+                    id: fileId,
+                    metadata,
+                });
             });
-
+    
             uploadStream.on('error', (error) => {
                 reject(new Error(`File upload failed: ${error.message}`));
             });

@@ -467,11 +467,11 @@ return this.database;
                 if (field instanceof FileField && data[fieldName as keyof T]) {
                     const newFile = data[fieldName as keyof T] as unknown as File; // Type assertion
                     const oldFileId = document[fieldName as keyof T] as unknown as ObjectId; // Type assertion
-
+    
                     // Upload the new file
-                    const { id: newFileId, metadata } = await field.uploadFile(newFile, this);
+                    const { id: newFileId } = await field.uploadFile(newFile, this);
                     data[fieldName as keyof T] = newFileId as unknown as T[keyof T]; // Store the new file ID in the document
-
+    
                     // Delete the old file if it exists
                     if (oldFileId) {
                         await field.deleteFile(oldFileId, this);
@@ -658,6 +658,19 @@ return this.database;
         // Execute pre-save hooks
     await this.executeHooks(HookType.PreSave, aliasedData);
 
+    // Handle file uploads for FileField
+    for (const [fieldName, field] of Object.entries(this.fields)) {
+        if (field instanceof FileField) {
+            // Treat `data` as `Partial<T>` to access fields dynamically
+            const partialData = data as Partial<T>;
+            if (partialData[fieldName as keyof T]) {
+                const file = partialData[fieldName as keyof T] as unknown as File; // Type assertion
+                const uploadedFile = await field.uploadFile(file, this);
+                partialData[fieldName as keyof T] = uploadedFile.id as unknown as T[keyof T]; // Store the file ID in the document
+            }
+        }
+    }
+
          // Save the document
          let _id: ObjectId;
          if (aliasedData._id) {
@@ -676,13 +689,14 @@ return this.database;
              }
              _id = aliasedData._id;
          } else {
-            for (const [fieldName, field] of Object.entries(this.fields)) {
-                if (field instanceof FileField && data[fieldName]) {
-                    const file = data[fieldName];
-                    const { id, metadata } = await field.uploadFile(file, this);
-                    data[fieldName] = id; // Store the file ID in the document
-                }
-            }
+            // for (const [fieldName, field] of Object.entries(this.fields)) {
+            //     if (field instanceof FileField && data[fieldName]) {
+            //         const file = data[fieldName];
+            //         const { id, metadata } = await field.uploadFile(file, this);
+            //         data[fieldName] = id; // Store the file ID in the document
+            //     }
+            // }
+           
              // Insert new document
              const result = await this.collection.insertOne(aliasedData, { session: options?.session });
              _id = result.insertedId;

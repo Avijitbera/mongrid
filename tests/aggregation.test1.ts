@@ -13,6 +13,15 @@ interface OrderRevenueByProduct {
     _id: string; // The product name
     totalRevenue: number; // The total revenue for the product
 }
+
+interface OrderWithCustomer extends Order {
+    customer: { id: string; name: string }[]; // Added field for the joined customer data
+}
+
+interface OrderCountResult {
+    totalOrders: number; // Added field for the count result
+}
+
 interface Order {
     id: string;
     product: string;
@@ -146,5 +155,59 @@ describe("AggregationBuilder Tests", () =>{
         expect(results).toHaveLength(5); // Original 3 + 2 unwound documents
     });
 
+    it('should count the number of documents', async () => {
+        const results = (await orderModel
+            .aggregate()
+            .count("totalOrders") // Count the number of documents
+            .execute()) as unknown as OrderCountResult[]; // Cast the result to OrderCountResult
 
+        expect(results).toHaveLength(1);
+        expect(results[0].totalOrders).toBe(3);  // 3 orders in the collection
+    });
+
+
+    it('should perform a $lookup to join data from another collection', async () => {
+        // Create a related collection for testing
+        const customerModel = new Model<{ id: string; name: string }>(db, "customers")
+            .addField("id", new FieldBuilder<string>("id").type(String).required().build())
+            .addField("name", new FieldBuilder<string>("name").type(String).required().build());
+
+        await customerModel.save({ id: "1", name: "John Doe" });
+
+        const results = await orderModel
+            .aggregate()
+            .lookup({
+                from: "customers",
+                localField: "id",
+                foreignField: "id",
+                as: "customer",
+            })
+            .execute() as OrderWithCustomer[];
+
+        expect(results).toHaveLength(3);
+        expect(results[0].customer).toBeDefined();
+    });
+
+    it('should replace the root document', async () => {
+        const results = await orderModel
+            .aggregate()
+            .replaceRoot("$product") // Replace root with the product field
+            .execute();
+
+        expect(results).toHaveLength(3);
+        expect(results[0]).toBe("Laptop");
+        expect(results[1]).toBe("Phone");
+        expect(results[2]).toBe("Tablet");
+    });
+
+    it('should merge results into another collection', async () => {
+        const results = await orderModel
+            .aggregate()
+            .merge({ into: "order_summaries" }) // Merge results into a new collection
+            .execute();
+
+        // Verify that the results were merged into the new collection
+        const summaries = await db.getCollection("order_summaries").find().toArray();
+        expect(summaries).toHaveLength(3);
+    });
 })
