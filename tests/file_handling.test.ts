@@ -111,5 +111,57 @@ describe('File Handling Tests', () => {
         ).rejects.toThrow('File size exceeds the maximum allowed size');
     });
 
+    it('should delete the file when the product is deleted', async () => {
+        // Create a mock file
+        const mockFile: File = {
+            originalname: 'test-image.jpg',
+            buffer: Buffer.from('mock file content'),
+            mimetype: 'image/jpeg',
+            size: 1024,
+        };
 
+        // Save the product with the uploaded file
+        const productId = await productModel.save({
+            id: '789',
+            name: 'Product to Delete',
+            image: mockFile,
+        });
+
+        // Retrieve the product and file ID
+        const product = await productModel.findById(new ObjectId(productId));
+        expect(product).toBeDefined();
+        const file = product!.image;
+
+        // Delete the product
+        await productModel.deleteById(new ObjectId(productId));
+
+        // Attempt to retrieve the file metadata (should throw an error)
+        await expect(fileField.getFileMetadata(file.id!, productModel)).rejects.toThrow('File not found');
+    });
+
+    it('should generate a URL for the uploaded file', async () => {
+        // Create a mock file
+        const mockFile: File = {
+            originalname: 'test-image.jpg',
+            buffer: Buffer.from('mock file content'),
+            mimetype: 'image/jpeg',
+            size: 1024,
+        };
+
+        // Save the product with the uploaded file
+        const productId = await productModel.save({
+            id: '101',
+            name: 'Product with URL',
+            image: mockFile,
+        });
+
+        // Retrieve the product
+        const product = await productModel.findById(new ObjectId(productId));
+        expect(product).toBeDefined();
+
+        // Generate the file URL
+        const fileUrl = fileField.getFileUrl(product!.image!.id!, productModel);
+        expect(fileUrl).toBeDefined();
+        expect(fileUrl).toMatch(/\/files\/[a-f0-9]{24}/); // URL should match the pattern
+    });
 })
