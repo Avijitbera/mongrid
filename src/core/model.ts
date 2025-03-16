@@ -292,59 +292,66 @@ return this.database;
             if(fieldOptions.required){
                 validator.$jsonSchema.required.push(name);
             }
-
-            validator.$jsonSchema.properties[name] = {
-            
-                bsonType: this.getBsonType(fieldOptions.type),
-            }
-
-             // Add enum validation
-             if (fieldOptions.enum) {
-                validator.$jsonSchema.properties[name].enum = fieldOptions.enum;
-            }
-
-            if (fieldOptions.min !== undefined) {
-                validator.$jsonSchema.properties[name].minimum = fieldOptions.min;
-            }
-            if (fieldOptions.max !== undefined) {
-                validator.$jsonSchema.properties[name].maximum = fieldOptions.max;
-            }
-
-            // Add regex validation
-            if (fieldOptions.regex) {
-                validator.$jsonSchema.properties[name].pattern = fieldOptions.regex.source;
-            }
-
-
-            // if(fieldOptions.default !== undefined){
-            //     validator.$jsonSchema.properties[name].default = fieldOptions.default
-            // }
-
-            if(field instanceof NestedField){
+            if (field instanceof FileField){
                 validator.$jsonSchema.properties[name] = {
-                    bsonType: 'object',
-                    required: [],
-                    properties: {},
+                    bsonType: 'objectId', // FileField stores an ObjectId
                 };
+            }else{
 
-                for (const [nestedFieldName, nestedField] of Object.entries(field.getFields())){
-                    const nestedFieldOptions = nestedField.getOptions();
-
-                // Add to required array if the nested field is required
-                if (nestedFieldOptions.required) {
-                    validator.$jsonSchema.properties[name].required.push(nestedFieldName);
+                validator.$jsonSchema.properties[name] = {
+                
+                    bsonType: this.getBsonType(fieldOptions.type),
                 }
-
-                // Add nested field properties to the schema
-                validator.$jsonSchema.properties[name].properties[nestedFieldName] = {
-                    bsonType: this.getBsonType(nestedFieldOptions.type),
-                };
+    
+                 // Add enum validation
+                 if (fieldOptions.enum) {
+                    validator.$jsonSchema.properties[name].enum = fieldOptions.enum;
+                }
+    
+                if (fieldOptions.min !== undefined) {
+                    validator.$jsonSchema.properties[name].minimum = fieldOptions.min;
+                }
+                if (fieldOptions.max !== undefined) {
+                    validator.$jsonSchema.properties[name].maximum = fieldOptions.max;
+                }
+    
+                // Add regex validation
+                if (fieldOptions.regex) {
+                    validator.$jsonSchema.properties[name].pattern = fieldOptions.regex.source;
+                }
+    
+    
+                // if(fieldOptions.default !== undefined){
+                //     validator.$jsonSchema.properties[name].default = fieldOptions.default
+                // }
+    
+                if(field instanceof NestedField){
+                    validator.$jsonSchema.properties[name] = {
+                        bsonType: 'object',
+                        required: [],
+                        properties: {},
+                    };
+    
+                    for (const [nestedFieldName, nestedField] of Object.entries(field.getFields())){
+                        const nestedFieldOptions = nestedField.getOptions();
+    
+                    // Add to required array if the nested field is required
+                    if (nestedFieldOptions.required) {
+                        validator.$jsonSchema.properties[name].required.push(nestedFieldName);
+                    }
+    
+                    // Add nested field properties to the schema
+                    validator.$jsonSchema.properties[name].properties[nestedFieldName] = {
+                        bsonType: this.getBsonType(nestedFieldOptions.type),
+                    };
+                    }
+                }
+    
+                if(fieldOptions.immutable){
+                    validator.$jsonSchema.properties[name].readOnly = true;
                 }
             }
 
-            if(fieldOptions.immutable){
-                validator.$jsonSchema.properties[name].readOnly = true;
-            }
            
         }
         
@@ -637,7 +644,7 @@ return this.database;
         
 
         
-    const aliasedData: any = {};
+    let aliasedData: any = {};
     for (const [fieldName, field] of Object.entries(this.fields)) {
         const fieldOptions = field.getOptions();
         const alias = fieldOptions.alias || fieldName;
@@ -661,16 +668,20 @@ return this.database;
     // Handle file uploads for FileField
     for (const [fieldName, field] of Object.entries(this.fields)) {
         if (field instanceof FileField) {
-            // Treat `data` as `Partial<T>` to access fields dynamically
             const partialData = data as Partial<T>;
             if (partialData[fieldName as keyof T]) {
                 const file = partialData[fieldName as keyof T] as unknown as File; // Type assertion
                 const uploadedFile = await field.uploadFile(file, this);
                 partialData[fieldName as keyof T] = uploadedFile.id as unknown as T[keyof T]; // Store the file ID in the document
+                console.log({partialData})
+                aliasedData = partialData
+
             }
         }
     }
-
+console.log({aliasedData})
+    // Log the document being inserted for debugging
+    console.log('Document being inserted:', JSON.stringify(data, null, 2));
          // Save the document
          let _id: ObjectId;
          if (aliasedData._id) {

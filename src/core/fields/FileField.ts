@@ -84,14 +84,14 @@ export class FileField<T extends Document> extends Field<T>  {
         return this;
     }
 
-    /**
+     /**
      * Uploads a file to GridFS and returns the file ID and metadata.
      * @param file The file to upload.
      * @param model The model instance.
      * @returns A promise that resolves to the file ID and metadata.
      * @throws {MongridError} If the file upload fails.
      */
-    async uploadFile(file: File, model: Model<T>): Promise<File> {
+     async uploadFile(file: File, model: Model<T>): Promise<File> {
         const db = model.getDb();
         const bucket = new GridFSBucket(db, { bucketName: this.bucketName });
 
@@ -104,9 +104,12 @@ export class FileField<T extends Document> extends Field<T>  {
         if (this.allowedMimeTypes.length > 0 && !this.allowedMimeTypes.includes(file.mimetype)) {
             throw new Error(`File type '${file.mimetype}' is not allowed`);
         }
+        console.log("Uploading files")
 
         // Upload file to GridFS
         return new Promise((resolve, reject) => {
+            console.log("File Uploading")
+            console.log({name:file.originalname})
             const uploadStream = bucket.openUploadStream(file.originalname, {
                 metadata: {
                     originalName: file.originalname,
@@ -114,7 +117,7 @@ export class FileField<T extends Document> extends Field<T>  {
                     size: file.size,
                 },
             });
-    
+
             uploadStream.write(file.buffer);
             uploadStream.end(() => {
                 const fileId = uploadStream.id;
@@ -125,24 +128,78 @@ export class FileField<T extends Document> extends Field<T>  {
                     mimeType: file.mimetype,
                     uploadDate: new Date(),
                 };
-    
+
                 // Cache metadata if enabled
                 if (this.cacheMetadata) {
                     this.cachedMetadata.set(fileId, metadata);
                 }
-    
+
                 resolve({
                     ...file,
                     id: fileId,
                     metadata,
                 });
             });
-    
+
             uploadStream.on('error', (error) => {
+                console.log({error})
                 reject(new Error(`File upload failed: ${error.message}`));
             });
         });
     }
+    // async uploadFile(file: File, model: Model<T>): Promise<File> {
+    //     const db = model.getDb();
+    //     const bucket = new GridFSBucket(db, { bucketName: this.bucketName });
+    //     console.log({bucket})
+
+    //     // Validate file size
+    //     if (file.size > this.maxFileSize) {
+    //         throw new Error(`File size exceeds the maximum allowed size of ${this.maxFileSize} bytes`);
+    //     }
+
+    //     // Validate MIME type
+    //     if (this.allowedMimeTypes.length > 0 && !this.allowedMimeTypes.includes(file.mimetype)) {
+    //         throw new Error(`File type '${file.mimetype}' is not allowed`);
+    //     }
+
+    //     // Upload file to GridFS
+    //     return new Promise((resolve, reject) => {
+    //         const uploadStream = bucket.openUploadStream(file.originalname, {
+    //             metadata: {
+    //                 originalName: file.originalname,
+    //                 mimeType: file.mimetype,
+    //                 size: file.size,
+    //             },
+    //         });
+    
+    //         uploadStream.write(file.buffer);
+    //         uploadStream.end(() => {
+    //             const fileId = uploadStream.id;
+    //             const metadata = {
+    //                 id: fileId,
+    //                 filename: file.originalname,
+    //                 size: file.size,
+    //                 mimeType: file.mimetype,
+    //                 uploadDate: new Date(),
+    //             };
+    
+    //             // Cache metadata if enabled
+    //             if (this.cacheMetadata) {
+    //                 this.cachedMetadata.set(fileId, metadata);
+    //             }
+    
+    //             resolve({
+    //                 ...file,
+    //                 id: fileId,
+    //                 metadata,
+    //             });
+    //         });
+    
+    //         uploadStream.on('error', (error) => {
+    //             reject(new Error(`File upload failed: ${error.message}`));
+    //         });
+    //     });
+    // }
 
 
     /**
