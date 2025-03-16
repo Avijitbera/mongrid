@@ -164,4 +164,67 @@ describe('File Handling Tests', () => {
         expect(fileUrl).toBeDefined();
         expect(fileUrl).toMatch(/\/files\/[a-f0-9]{24}/); // URL should match the pattern
     });
+
+
+    it('should stream a file from GridFS', async () => {
+        // Create a mock file
+        const mockFile: File = {
+            originalname: 'test-image.jpg',
+            buffer: Buffer.from('mock file content'),
+            mimetype: 'image/jpeg',
+            size: 1024,
+        };
+
+        // Save the product with the uploaded file
+        const productId = await productModel.save({
+            id: '102',
+            name: 'Product with Stream',
+            image: mockFile,
+        });
+
+        // Retrieve the product
+        const product = await productModel.findById(new ObjectId(productId));
+        expect(product).toBeDefined();
+
+        // Stream the file
+        const stream = fileField.streamFile(product!.image!.id!, productModel);
+        expect(stream).toBeDefined();
+
+        // Read the stream and verify the content
+        const chunks: Buffer[] = [];
+        for await (const chunk of stream) {
+            chunks.push(chunk);
+        }
+        const fileContent = Buffer.concat(chunks).toString();
+        expect(fileContent).toBe('mock file content');
+    });
+
+    it('should handle file metadata caching', async () => {
+        // Create a mock file
+        const mockFile: File = {
+            originalname: 'cached-image.jpg',
+            buffer: Buffer.from('mock file content'),
+            mimetype: 'image/jpeg',
+            size: 1024,
+        };
+
+        // Save the product with the uploaded file
+        const productId = await productModel.save({
+            id: '103',
+            name: 'Product with Cached Metadata',
+            image: mockFile,
+        });
+
+        // Retrieve the product
+        const product = await productModel.findById(new ObjectId(productId));
+        expect(product).toBeDefined();
+
+        // Retrieve the file metadata (should be cached)
+        const fileMetadata = await fileField.getFileMetadata(product!.image!.id!, productModel);
+        expect(fileMetadata).toBeDefined();
+
+        // Retrieve the file metadata again (should come from cache)
+        const cachedMetadata = await fileField.getFileMetadata(product!.image!.id!, productModel);
+        expect(cachedMetadata).toEqual(fileMetadata);
+    });
 })
