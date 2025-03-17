@@ -506,7 +506,25 @@ return this.database;
  */
 
     async deleteById(id: ObjectId, options?: {session? : ClientSession}) : Promise<DeleteResult>{
-        return await this.collection.deleteOne({
+        
+    const document = await this.findById(id);
+    if (!document) {
+        throw new MongridError(
+            "Document not found",
+            ERROR_CODES.DOCUMENT_NOT_FOUND,
+            { _id: id }
+        );
+    }
+
+    // Delete the associated file if the field is a FileField
+    for (const [fieldName, field] of Object.entries(this.fields)) {
+        if (field instanceof FileField && document[fieldName as keyof T]) {
+            const fileId = document[fieldName as keyof T] as unknown as ObjectId;
+            console.log(`Deleting file with ID: ${fileId.toString()}`); // Log the file ID
+            await field.deleteFile(fileId, this);
+        }
+    }
+    return await this.collection.deleteOne({
             _id: id
         } as Filter<T>, {session: options?.session})
     }
@@ -679,10 +697,8 @@ return this.database;
             }
         }
     }
-console.log({aliasedData})
-    // Log the document being inserted for debugging
-    console.log('Document being inserted:', JSON.stringify(data, null, 2));
-         // Save the document
+
+    
          let _id: ObjectId;
          if (aliasedData._id) {
              // Update existing document

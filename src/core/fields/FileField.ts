@@ -104,12 +104,11 @@ export class FileField<T extends Document> extends Field<T>  {
         if (this.allowedMimeTypes.length > 0 && !this.allowedMimeTypes.includes(file.mimetype)) {
             throw new Error(`File type '${file.mimetype}' is not allowed`);
         }
-        console.log("Uploading files")
+        
 
         // Upload file to GridFS
         return new Promise((resolve, reject) => {
-            console.log("File Uploading")
-            console.log({name:file.originalname})
+            
             const uploadStream = bucket.openUploadStream(file.originalname, {
                 metadata: {
                     originalName: file.originalname,
@@ -212,15 +211,35 @@ export class FileField<T extends Document> extends Field<T>  {
     async deleteFile(fileId: ObjectId, model: Model<T>): Promise<void> {
         const db = model.getDb();
         const bucket = new GridFSBucket(db, { bucketName: this.bucketName });
-
-        return new Promise(async(resolve, reject) => {
+    
+        console.log(`Attempting to delete file with ID: ${fileId.toString()}`); // Log the file ID
+    
+        // Verify that the file exists before attempting to delete it
+        const files = await bucket.find({ _id: fileId }).toArray();
+        console.log(`Files found: ${JSON.stringify(files)}`); // Log the files found
+    
+        if (files.length === 0) {
+            console.log(`File not found for ID: ${fileId.toString()}`); // Log if the file is not found
+            throw new MongridError(
+                `File not found for ID: ${fileId.toString()}`, // Convert fileId to string
+                ERROR_CODES.FILE_NOT_FOUND,
+                { fileId }
+            );
+        }
+    
+        // Delete the file
+        return new Promise(async (resolve, reject) => {
             try {
-                await bucket.delete(fileId,);
+                await bucket.delete(fileId);
+                console.log(`File deleted successfully: ${fileId.toString()}`); // Convert fileId to string
+    
+                // Remove metadata from cache if enabled
                 if (this.cacheMetadata) {
                     this.cachedMetadata.delete(fileId);
                 }
-                resolve()
-            } catch (error:any) {
+                resolve();
+            } catch (error: any) {
+                console.error(`File deletion failed: ${error.message}`); // Log the error
                 reject(
                     new MongridError(
                         `File deletion failed: ${error.message}`,
@@ -229,23 +248,6 @@ export class FileField<T extends Document> extends Field<T>  {
                     )
                 );
             }
-            // bucket.delete(fileId, (error) => {
-            //     if (error) {
-            //         reject(
-            //             new MongridError(
-            //                 `File deletion failed: ${error.message}`,
-            //                 ERROR_CODES.FILE_DELETION_ERROR,
-            //                 { fileId }
-            //             )
-            //         );
-            //     } else {
-            //         // Remove metadata from cache if enabled
-            //         if (this.cacheMetadata) {
-            //             this.cachedMetadata.delete(fileId);
-            //         }
-            //         resolve();
-            //     }
-            // });
         });
     }
 

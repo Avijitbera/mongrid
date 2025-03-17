@@ -39,7 +39,7 @@ describe('File Handling Tests', () => {
 
     afterAll(async () => {
          // Clean up the database after tests
-         productModel.delete();
+        //  productModel.delete();
     });
 
     it('should upload a file and save the file ID in the document', async () => {
@@ -119,22 +119,29 @@ describe('File Handling Tests', () => {
             mimetype: 'image/jpeg',
             size: 1024,
         };
-
+    
         // Save the product with the uploaded file
         const productId = await productModel.save({
             id: '789',
             name: 'Product to Delete',
             image: mockFile,
         });
-
+    
         // Retrieve the product and file ID
         const product = await productModel.findById(new ObjectId(productId));
+        console.log({product})
         expect(product).toBeDefined();
         const file = product!.image;
-
+        console.log({file})
+    
+        // Verify that the file exists before deletion
+        const fileMetadataBeforeDeletion = await fileField.getFileMetadata(file.id!, productModel);
+        console.log({fileMetadataBeforeDeletion})
+        expect(fileMetadataBeforeDeletion).toBeDefined();
+    
         // Delete the product
         await productModel.deleteById(new ObjectId(productId));
-
+    
         // Attempt to retrieve the file metadata (should throw an error)
         await expect(fileField.getFileMetadata(file.id!, productModel)).rejects.toThrow('File not found');
     });

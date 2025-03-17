@@ -103,7 +103,7 @@ describe("QueryBuilder Tests", () =>{
             age: 50,
             email: "eve@example.com",
         };
-        console.log("Saving user:", userDocument);
+       
         const userId = await userModel.save(userDocument);
 
         const postDocument = {
@@ -111,7 +111,7 @@ describe("QueryBuilder Tests", () =>{
             title: "First Post",
             userId: new ObjectId(userId), // Ensure userId is an ObjectId
         };
-        console.log("Saving post:", postDocument);
+       
         await postModel.save(postDocument);
     
         // Query with populated posts
