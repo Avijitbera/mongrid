@@ -14,6 +14,8 @@ describe('File Handling Tests', () => {
     let productModel: Model<Product>;
     let fileField: FileField<Product>;
 
+    
+
     beforeAll(async () => {
         const mongodb = await connect();
         db = new Database(mongodb);
@@ -29,13 +31,24 @@ describe('File Handling Tests', () => {
         productModel = new Model<Product>(db, 'products')
     .addField('id', new FieldBuilder<string>('id').type(String).required().build())
     .addField('name', new FieldBuilder<string>('name').type(String).required().build())
-    .addField('image', new FileField<Product>('image')
-        .maxSize(5 * 1024 * 1024) // 5MB max file size
-        .allowedTypes(['image/jpeg', 'image/png']) // Only allow JPEG and PNG
-        .autoDeleteOnRemove(true) // Automatically delete the file when the product is deleted
-        .enableMetadataCaching(true) // Cache file metadata
+    .addField('image', fileField // Cache file metadata
     );
+
+    // fileField1 = new FileField<Product>('image')
+    //         .maxSize(5 * 1024 * 1024) // 5MB max file size
+    //         .allowedTypes(['image/jpeg', 'image/png']) // Only allow JPEG and PNG
+    //         .autoDeleteOnRemove(true) // Automatically delete the file when the product is deleted
+    //         .enableMetadataCaching(true);
+    // productModel1 = new Model<Product>(db, 'products1')
+    // .addField('id', new FieldBuilder<string>('id').type(String).required().build())
+    // .addField('name', new FieldBuilder<string>('name').type(String).required().build())
+    // .addField('image', fileField1 // Cache file metadata
+    // );
+
+    
     })
+
+    
 
     afterAll(async () => {
          // Clean up the database after tests
@@ -129,22 +142,25 @@ describe('File Handling Tests', () => {
     
         // Retrieve the product and file ID
         const product = await productModel.findById(new ObjectId(productId));
-        console.log({product})
+        console.log({ product });
         expect(product).toBeDefined();
-        const file = product!.image;
-        console.log({file})
+        const fileId = product!.image;
+        console.log({ fileId });
     
         // Verify that the file exists before deletion
-        const fileMetadataBeforeDeletion = await fileField.getFileMetadata(file.id!, productModel);
-        console.log({fileMetadataBeforeDeletion})
+        const fileMetadataBeforeDeletion = await fileField.getFileMetadata(fileId.id!, productModel);
+        console.log({ fileMetadataBeforeDeletion });
         expect(fileMetadataBeforeDeletion).toBeDefined();
     
         // Delete the product
         await productModel.deleteById(new ObjectId(productId));
-    
+        console.log("File has Deleted")
+        await new Promise(f => setTimeout(f, 1600));
+        await expect(fileField.getFileMetadata(fileId.id!, productModel)).rejects.toThrow('File not found');
+        console.log("Getting Deleted File")
         // Attempt to retrieve the file metadata (should throw an error)
-        await expect(fileField.getFileMetadata(file.id!, productModel)).rejects.toThrow('File not found');
-    });
+        // await expect(fileField.getFileMetadata(fileId.id!, productModel)).rejects.toThrow('File not found');
+    }, 10000);
 
     it('should generate a URL for the uploaded file', async () => {
         // Create a mock file

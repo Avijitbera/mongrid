@@ -508,6 +508,7 @@ return this.database;
     async deleteById(id: ObjectId, options?: {session? : ClientSession}) : Promise<DeleteResult>{
         
     const document = await this.findById(id);
+
     if (!document) {
         throw new MongridError(
             "Document not found",
@@ -519,9 +520,11 @@ return this.database;
     // Delete the associated file if the field is a FileField
     for (const [fieldName, field] of Object.entries(this.fields)) {
         if (field instanceof FileField && document[fieldName as keyof T]) {
-            const fileId = document[fieldName as keyof T] as unknown as ObjectId;
-            console.log(`Deleting file with ID: ${fileId.toString()}`); // Log the file ID
-            await field.deleteFile(fileId, this);
+            console.log({document})
+            const file = document[fieldName as keyof T];
+            console.log({file})
+            console.log(`Deleting file with ID: ${file.id.toString()}`); // Log the file ID
+            await field.deleteFile(file.id, this);
         }
     }
     return await this.collection.deleteOne({

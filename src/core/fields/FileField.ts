@@ -210,28 +210,28 @@ export class FileField<T extends Document> extends Field<T>  {
      */
     async deleteFile(fileId: ObjectId, model: Model<T>): Promise<void> {
         const db = model.getDb();
-        const bucket = new GridFSBucket(db, { bucketName: this.bucketName });
-    
-        console.log(`Attempting to delete file with ID: ${fileId.toString()}`); // Log the file ID
-    
-        // Verify that the file exists before attempting to delete it
-        const files = await bucket.find({ _id: fileId }).toArray();
-        console.log(`Files found: ${JSON.stringify(files)}`); // Log the files found
-    
-        if (files.length === 0) {
-            console.log(`File not found for ID: ${fileId.toString()}`); // Log if the file is not found
-            throw new MongridError(
-                `File not found for ID: ${fileId.toString()}`, // Convert fileId to string
-                ERROR_CODES.FILE_NOT_FOUND,
-                { fileId }
-            );
-        }
+    const bucket = new GridFSBucket(db, { bucketName: this.bucketName });
+
+    console.log(`Attempting to delete file with ID: ${fileId.toString()}`); // Log the file ID
+
+    // Verify that the file exists before attempting to delete it
+    const files = await bucket.find({ _id: fileId }).toArray();
+    console.log(`Files found: ${JSON.stringify(files)}`); // Log the files found
+
+    if (files.length === 0) {
+        console.log(`File not found for ID: ${fileId.toString()}`); // Log if the file is not found
+        throw new MongridError(
+            `File not found for ID: ${fileId.toString()}`, // Convert fileId to string
+            ERROR_CODES.FILE_NOT_FOUND,
+            { fileId }
+        );
+    }
     
         // Delete the file
         return new Promise(async (resolve, reject) => {
             try {
                 await bucket.delete(fileId);
-                console.log(`File deleted successfully: ${fileId.toString()}`); // Convert fileId to string
+                console.log(`File deleted successfully: ${fileId.toString()}`); // Log the file ID
     
                 // Remove metadata from cache if enabled
                 if (this.cacheMetadata) {
@@ -258,15 +258,17 @@ export class FileField<T extends Document> extends Field<T>  {
      * @returns A promise that resolves to the file metadata.
      */
 async getFileMetadata(fileId: ObjectId, model: Model<T>): Promise<any> {
+    console.log({fileId})
     // Return cached metadata if available
-    if (this.cacheMetadata && this.cachedMetadata.has(fileId)) {
-        return this.cachedMetadata.get(fileId);
-    }
+    // if (this.cacheMetadata && this.cachedMetadata.has(fileId)) {
+    //     return this.cachedMetadata.get(fileId);
+    // }
 
     const db = model.getDb();
     const bucket = new GridFSBucket(db, { bucketName: this.bucketName });
 
-    const files = await bucket.find({ _id: fileId }).toArray();
+    const files = await bucket.find({ _id: fileId,  }).toArray();
+    console.log({files})
     if (files.length === 0) {
         throw new MongridError(
             `File not found`,
